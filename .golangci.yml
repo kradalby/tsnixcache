@@ -1,0 +1,53 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - misspell
+    - unconvert
+    - unparam
+  settings:
+    errcheck:
+      exclude-functions:
+        # Close on readers/writers: errors are benign or already propagated via the writer.
+        - "(*os.File).Close"
+        - "(*database/sql.Rows).Close"
+        - "(*database/sql.DB).Close"
+        - "(*database/sql.Stmt).Close"
+        - "(*io.PipeReader).Close"
+        - "(*io.PipeWriter).Close"
+        - "(io.ReadCloser).Close"
+        - "(io.WriteCloser).Close"
+        # fsnotify watcher close.
+        - "(*github.com/fsnotify/fsnotify.Watcher).Close"
+        # store.Store.Close only wraps db.Close which is already excluded.
+        - "(*github.com/kradalby/tsnixcache/store.Store).Close"
+        # fmt.Fprint* to http.ResponseWriter cannot meaningfully fail.
+        - "fmt.Fprintf"
+        - "fmt.Fprint"
+        - "fmt.Fprintln"
+        # os.Remove in cleanup paths: if the file is already gone, that's fine.
+        - "os.Remove"
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/kradalby/tsnixcache
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - errcheck
+        - unparam
