@@ -1,0 +1,12 @@
+# binaries
+tsnixcache
+/result
+/result-*
+
+# nix
+.direnv/
+
+# editor
+.idea/
+*.swp
+*.swo
