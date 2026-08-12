@@ -1,5 +1,7 @@
 # binaries
-tsnixcache
+/tsnixcache
+/vendorhash
+/dashboard
 /result
 /result-*
 

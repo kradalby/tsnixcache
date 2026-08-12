@@ -1,0 +1,30 @@
+name: test
+
+on:
+  push:
+    branches: [main, initial]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  # All Linux checks (build, gotest, golangci-lint, formatting, and the NixOS VM
+  # tests) run on garnix — see garnix.yaml. Only macOS runs here, since garnix
+  # does not cover it.
+  darwin:
+    name: darwin (build + module + auto-push)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: NixOS/nix-installer-action@6b8548fe06acfb0155a50ab5d561accb215764cc # main
+      # No hestia cache here: it installs its own nix post-build-hook, which
+      # would occupy the single post-build-hook slot the auto-push test needs.
+      - name: build package
+        run: nix build --fallback .#packages.aarch64-darwin.default
+      - name: build darwin system (validates client module)
+        run: nix build --fallback .#darwinConfigurations.example.system
+      - name: functional auto-push test (post-build-hook + watch)
+        run: ./nix/tests/darwin-push-test.sh

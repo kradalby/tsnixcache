@@ -1,0 +1,17 @@
+[global]
+on-unmatched = "ignore"
+
+[formatter.gofumpt]
+command = "gofumpt"
+options = ["-w"]
+includes = ["*.go"]
+
+[formatter.goimports]
+command = "goimports"
+options = ["-w", "-local", "github.com/kradalby/tsnixcache"]
+includes = ["*.go"]
+needs = ["gofumpt"]
+
+[formatter.nixpkgs-fmt]
+command = "nixpkgs-fmt"
+includes = ["*.nix"]
