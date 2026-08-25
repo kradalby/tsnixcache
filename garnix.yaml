@@ -1,6 +1,0 @@
-# macOS is not built here; it stays on GitHub Actions (.github/workflows/test.yml).
-builds:
-  include:
-    - 'checks.x86_64-linux.*'
-    - 'packages.x86_64-linux.*'
-    - 'devShells.x86_64-linux.*'
