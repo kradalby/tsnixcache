@@ -210,14 +210,11 @@ func (w *Watcher) Watch(ctx context.Context) error { //nolint:cyclop
 		defer idleTimer.Stop()
 
 		idleC = idleTimer.C
+		// Reset alone is enough. Since Go 1.23 timer channels are unbuffered and
+		// Reset guarantees nothing from the previous setting is received after
+		// it returns, the Stop-then-drain dance this used to do was dead
+		// code: its drain branch could never be taken.
 		resetIdle = func() {
-			if !idleTimer.Stop() {
-				select {
-				case <-idleTimer.C:
-				default:
-				}
-			}
-
 			idleTimer.Reset(w.IdleExit)
 		}
 	}
@@ -229,19 +226,19 @@ func (w *Watcher) Watch(ctx context.Context) error { //nolint:cyclop
 
 	// debounceTimer fires after the debounce delay following the last fsnotify event.
 	// It starts stopped; we use Reset to arm it.
+	//
+	// Stop is deliberately not followed by a receive. Since Go 1.23 timer
+	// channels are unbuffered and Stop discards any value the timer has already
+	// produced, a freshly created timer always reports true from Stop: the
+	// old `if !Stop() { <-C }` guard never ran its drain, and had it run it
+	// would have blocked forever rather than collected a stale tick. Go 1.27
+	// removed the asynctimerchan GODEBUG that restored the old buffered
+	// behaviour, so there is no way back to the semantics that idiom was
+	// written for.
 	debounceTimer := time.NewTimer(debounce)
-	if !debounceTimer.Stop() {
-		<-debounceTimer.C
-	}
+	debounceTimer.Stop()
 
 	armDebounce := func() {
-		if !debounceTimer.Stop() {
-			select {
-			case <-debounceTimer.C:
-			default:
-			}
-		}
-
 		debounceTimer.Reset(debounce)
 	}
 
