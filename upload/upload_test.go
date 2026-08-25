@@ -127,7 +127,7 @@ func TestMonitorReportsProgress(t *testing.T) {
 
 		go func() { peakCh <- u.monitor("/nix/store/x", m, &sent, cancel, done) }()
 
-		time.Sleep(250 * time.Millisecond) // 2 ticks at 100ms
+		synctest.Sleep(250 * time.Millisecond) // 2 ticks at 100ms
 		close(done)
 		<-peakCh
 
@@ -151,7 +151,7 @@ func TestOnStartFiresOncePerPath(t *testing.T) {
 		narPuts int
 	)
 
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodHead {
 			http.NotFound(w, r) // not present, so it must be uploaded
 
@@ -166,7 +166,10 @@ func TestOnStartFiresOncePerPath(t *testing.T) {
 
 		http.Error(w, "nope", http.StatusInternalServerError) // every attempt fails
 	}))
-	t.Cleanup(srv.Close)
+
+	// Client is what starts the in-memory server and fills in srv.URL, so it has
+	// to be called before the URL is read below.
+	client := srv.Client()
 
 	payload := filepath.Join(t.TempDir(), "payload")
 
@@ -180,7 +183,7 @@ func TestOnStartFiresOncePerPath(t *testing.T) {
 	u := &uploader{
 		target:   srv.URL,
 		attempts: attempts,
-		client:   srv.Client(),
+		client:   client,
 		onStart: func(_ string, narSize int64) {
 			mu.Lock()
 			defer mu.Unlock()
@@ -653,7 +656,7 @@ func TestPermanentStatusEndsRetries(t *testing.T) {
 				narPuts int
 			)
 
-			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.Method == http.MethodHead {
 					http.NotFound(w, r) // not present, so it must be uploaded
 
@@ -668,13 +671,15 @@ func TestPermanentStatusEndsRetries(t *testing.T) {
 
 				http.Error(w, message, tt.status)
 			}))
-			t.Cleanup(srv.Close)
+
+			// Client starts the in-memory server and fills in srv.URL.
+			client := srv.Client()
 
 			u := &uploader{
 				target:       srv.URL,
 				attempts:     attempts,
 				stallTimeout: time.Minute,
-				client:       srv.Client(),
+				client:       client,
 			}
 
 			_, err := u.uploadPath(t.Context(), pathMeta{
