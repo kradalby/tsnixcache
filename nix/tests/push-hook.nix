@@ -2,7 +2,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 # Auto-push via nix post-build-hook only (the exact, recommended mechanism).
-{ pkgs, tsnixcache, tsnixcacheModule, tsnixcacheClientModule }:
+{
+  pkgs,
+  tsnixcache,
+  tsnixcacheModule,
+  tsnixcacheClientModule,
+}:
 
 let
   common = import ./push-common.nix { inherit pkgs tsnixcache tsnixcacheModule; };

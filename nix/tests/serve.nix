@@ -1,7 +1,11 @@
 # Copyright (c) 2026 Kristoffer Dalby
 # SPDX-License-Identifier: BSD-3-Clause
 
-{ pkgs, tsnixcache, tsnixcacheModule }:
+{
+  pkgs,
+  tsnixcache,
+  tsnixcacheModule,
+}:
 
 let
   common = import ./push-common.nix { inherit pkgs tsnixcache tsnixcacheModule; };
@@ -11,7 +15,10 @@ in
 
   nodes = {
     server = { config, pkgs, ... }: {
-      imports = [ tsnixcacheModule common.keyFileConfig ];
+      imports = [
+        tsnixcacheModule
+        common.keyFileConfig
+      ];
       services.tsnixcache = {
         enable = true;
         package = tsnixcache;

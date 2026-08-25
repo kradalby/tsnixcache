@@ -1,7 +1,11 @@
 # Copyright (c) 2026 Kristoffer Dalby
 # SPDX-License-Identifier: BSD-3-Clause
 
-{ pkgs, tsnixcache, tsnixcacheModule }:
+{
+  pkgs,
+  tsnixcache,
+  tsnixcacheModule,
+}:
 
 let
   common = import ./push-common.nix { inherit pkgs tsnixcache tsnixcacheModule; };
@@ -10,22 +14,32 @@ in
   name = "tsnixcache-push";
 
   nodes = {
-    server = { config, pkgs, lib, ... }: {
-      imports = [ common.serverNode ];
-      services.tsnixcache.priority = 30;
+    server =
+      {
+        config,
+        pkgs,
+        lib,
+        ...
+      }:
+      {
+        imports = [ common.serverNode ];
+        services.tsnixcache.priority = 30;
 
-      # The same server with localWrite back at its default, so the second half
-      # of the test can show a real nix client being refused on a real listener.
-      # A specialisation rather than a second node: it switches in place, so the
-      # gate costs a system closure instead of another VM boot.
-      specialisation.readonly.configuration = {
-        services.tsnixcache.localWrite = lib.mkForce false;
+        # The same server with localWrite back at its default, so the second half
+        # of the test can show a real nix client being refused on a real listener.
+        # A specialisation rather than a second node: it switches in place, so the
+        # gate costs a system closure instead of another VM boot.
+        specialisation.readonly.configuration = {
+          services.tsnixcache.localWrite = lib.mkForce false;
+        };
       };
-    };
 
     pusher = { config, pkgs, ... }: {
       # The pusher needs nix copy and the hello package to push.
-      environment.systemPackages = [ pkgs.hello pkgs.nix ];
+      environment.systemPackages = [
+        pkgs.hello
+        pkgs.nix
+      ];
       nix.settings = {
         trusted-users = [ "root" ];
         # nix copy uses the nix-command experimental feature.

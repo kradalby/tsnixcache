@@ -3,7 +3,12 @@
 
 # Best-effort post-build-hook: a build must succeed even when the cache is
 # unreachable. No server node — the hook points at a dead address.
-{ pkgs, tsnixcache, tsnixcacheModule, tsnixcacheClientModule }:
+{
+  pkgs,
+  tsnixcache,
+  tsnixcacheModule,
+  tsnixcacheClientModule,
+}:
 
 let
   common = import ./push-common.nix { inherit pkgs tsnixcache tsnixcacheModule; };

@@ -2,7 +2,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 # Auto-push via the watch daemon only (fallback for non-built paths).
-{ pkgs, tsnixcache, tsnixcacheModule, tsnixcacheClientModule }:
+{
+  pkgs,
+  tsnixcache,
+  tsnixcacheModule,
+  tsnixcacheClientModule,
+}:
 
 let
   common = import ./push-common.nix { inherit pkgs tsnixcache tsnixcacheModule; };

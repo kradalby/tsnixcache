@@ -623,7 +623,7 @@ nix fmt
 Everything below is enforced somewhere, so it is cheaper to run it locally than
 to learn it from a red build:
 
-- **`nix fmt` (treefmt: gofumpt, goimports, nixpkgs-fmt).** `checks.formatting`
+- **`nix fmt` (treefmt: gofumpt, goimports, nixfmt).** `checks.formatting`
   fails on unformatted code, and the pre-commit hook runs
   `treefmt --fail-on-change`.
 - **`go run ./cmd/vendorhash update` after any `go.mod`/`go.sum` change.**

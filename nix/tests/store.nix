@@ -1,7 +1,11 @@
 # Copyright (c) 2026 Kristoffer Dalby
 # SPDX-License-Identifier: BSD-3-Clause
 
-{ pkgs, tsnixcache, tsnixcacheModule }:
+{
+  pkgs,
+  tsnixcache,
+  tsnixcacheModule,
+}:
 
 let
   chroot = "/var/lib/tsnixcache/chroot";
@@ -30,7 +34,10 @@ in
     };
 
     pusher = { config, pkgs, ... }: {
-      environment.systemPackages = [ pkgs.hello pkgs.nix ];
+      environment.systemPackages = [
+        pkgs.hello
+        pkgs.nix
+      ];
       nix.settings = {
         trusted-users = [ "root" ];
         experimental-features = [ "nix-command" ];

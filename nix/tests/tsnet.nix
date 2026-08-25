@@ -1,7 +1,12 @@
 # Copyright (c) 2026 Kristoffer Dalby
 # SPDX-License-Identifier: BSD-3-Clause
 
-{ pkgs, tsnixcache, tsnixcacheModule, headscale }:
+{
+  pkgs,
+  tsnixcache,
+  tsnixcacheModule,
+  headscale,
+}:
 
 let
   # TLS cert for headscale, generated at eval time so all nodes can trust it.
@@ -38,94 +43,122 @@ in
   name = "tsnixcache-tsnet";
 
   nodes = {
-    headscale = { config, pkgs, lib, ... }: {
-      imports = [ sharedConfig ];
+    headscale =
+      {
+        config,
+        pkgs,
+        lib,
+        ...
+      }:
+      {
+        imports = [ sharedConfig ];
 
-      environment.systemPackages = [ pkgs.jq ];
+        environment.systemPackages = [ pkgs.jq ];
 
-      services.headscale = {
-        enable = true;
-        package = headscale;
-        address = "127.0.0.1";
-        port = 8080;
-        settings = {
-          server_url = "https://headscale";
-          policy.mode = "database";
-          dns = {
-            magic_dns = false;
-            override_local_dns = false;
-          };
-          # Built-in DERP so nodes can relay without public infrastructure.
-          derp = {
-            server = {
-              enabled = true;
-              region_id = 999;
-              region_code = "test";
-              region_name = "Test DERP";
-              stun_listen_addr = "0.0.0.0:3478";
+        services.headscale = {
+          enable = true;
+          package = headscale;
+          address = "127.0.0.1";
+          port = 8080;
+          settings = {
+            server_url = "https://headscale";
+            policy.mode = "database";
+            dns = {
+              magic_dns = false;
+              override_local_dns = false;
             };
-            urls = [ ];
-            auto_update_enabled = false;
+            # Built-in DERP so nodes can relay without public infrastructure.
+            derp = {
+              server = {
+                enabled = true;
+                region_id = 999;
+                region_code = "test";
+                region_name = "Test DERP";
+                stun_listen_addr = "0.0.0.0:3478";
+              };
+              urls = [ ];
+              auto_update_enabled = false;
+            };
           };
+        };
+
+        # nginx TLS proxy — tsnet's control client requires HTTPS.
+        services.nginx = {
+          enable = true;
+          virtualHosts."headscale" = {
+            onlySSL = true;
+            sslCertificate = "${tlsCert}/cert.pem";
+            sslCertificateKey = "${tlsCert}/key.pem";
+            locations."/" = {
+              proxyPass = "http://127.0.0.1:8080";
+              proxyWebsockets = true;
+            };
+          };
+        };
+
+        networking.firewall = {
+          allowedTCPPorts = [ 443 ];
+          allowedUDPPorts = [ 3478 ];
         };
       };
 
-      # nginx TLS proxy — tsnet's control client requires HTTPS.
-      services.nginx = {
-        enable = true;
-        virtualHosts."headscale" = {
-          onlySSL = true;
-          sslCertificate = "${tlsCert}/cert.pem";
-          sslCertificateKey = "${tlsCert}/key.pem";
-          locations."/" = {
-            proxyPass = "http://127.0.0.1:8080";
-            proxyWebsockets = true;
-          };
+    server =
+      {
+        config,
+        pkgs,
+        lib,
+        ...
+      }:
+      {
+        imports = [
+          sharedConfig
+          tsnixcacheModule
+        ];
+
+        environment.systemPackages = [ pkgs.curl ];
+
+        services.tsnixcache = {
+          enable = true;
+          package = tsnixcache;
+          # Local listener for in-VM metric checks (no auth).
+          listen = [ "127.0.0.1:5000" ];
+          tsnet = [
+            {
+              hostname = "tsnixcache";
+              controlUrl = "https://headscale";
+              # Written by the test script after headscale issues the auth key.
+              authKeyFile = "/var/lib/tsnixcache/tsnet-authkey";
+              dir = "/var/lib/tsnixcache/tsnet";
+              port = 80;
+              tls = false;
+            }
+          ];
         };
+
+        nix.settings.trusted-users = [
+          "root"
+          "tsnixcache"
+        ];
+
+        # Don't auto-start: the test writes the auth key first, then starts it.
+        systemd.services.tsnixcache.wantedBy = lib.mkForce [ ];
+        systemd.services.tsnixcache.environment.TS_NO_LOGS_NO_SUPPORT = "1";
+        # Force tsnet to treat network as up (avoids pause-until-link-change race on a stable test VLAN).
+        systemd.services.tsnixcache.environment.TS_ASSUME_NETWORK_UP_FOR_TEST = "1";
+        systemd.services.tsnixcache.environment.TS_DEBUG_REGISTER = "1";
       };
-
-      networking.firewall = {
-        allowedTCPPorts = [ 443 ];
-        allowedUDPPorts = [ 3478 ];
-      };
-    };
-
-    server = { config, pkgs, lib, ... }: {
-      imports = [ sharedConfig tsnixcacheModule ];
-
-      environment.systemPackages = [ pkgs.curl ];
-
-      services.tsnixcache = {
-        enable = true;
-        package = tsnixcache;
-        # Local listener for in-VM metric checks (no auth).
-        listen = [ "127.0.0.1:5000" ];
-        tsnet = [{
-          hostname = "tsnixcache";
-          controlUrl = "https://headscale";
-          # Written by the test script after headscale issues the auth key.
-          authKeyFile = "/var/lib/tsnixcache/tsnet-authkey";
-          dir = "/var/lib/tsnixcache/tsnet";
-          port = 80;
-          tls = false;
-        }];
-      };
-
-      nix.settings.trusted-users = [ "root" "tsnixcache" ];
-
-      # Don't auto-start: the test writes the auth key first, then starts it.
-      systemd.services.tsnixcache.wantedBy = lib.mkForce [ ];
-      systemd.services.tsnixcache.environment.TS_NO_LOGS_NO_SUPPORT = "1";
-      # Force tsnet to treat network as up (avoids pause-until-link-change race on a stable test VLAN).
-      systemd.services.tsnixcache.environment.TS_ASSUME_NETWORK_UP_FOR_TEST = "1";
-      systemd.services.tsnixcache.environment.TS_DEBUG_REGISTER = "1";
-    };
 
     pusher = { config, pkgs, ... }: {
-      imports = [ sharedConfig tailscaleClient ];
+      imports = [
+        sharedConfig
+        tailscaleClient
+      ];
 
       # hello lives here so the pusher can push it to the server.
-      environment.systemPackages = [ pkgs.hello pkgs.nix ];
+      environment.systemPackages = [
+        pkgs.hello
+        pkgs.nix
+      ];
       nix.settings = {
         trusted-users = [ "root" ];
         experimental-features = [ "nix-command" ];
@@ -133,7 +166,10 @@ in
     };
 
     reader = { config, pkgs, ... }: {
-      imports = [ sharedConfig tailscaleClient ];
+      imports = [
+        sharedConfig
+        tailscaleClient
+      ];
 
       nix.settings = {
         # No pre-configured substituters; we'll pass the tsnet URL explicitly.

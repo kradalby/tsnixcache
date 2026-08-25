@@ -8,7 +8,12 @@
 # fallback for paths that arrive outside the local daemon's builds; it is OFF by
 # default, uses FSEvents (no busy loop), polls the DB only as a slow safety net,
 # and runs as a launchd Background job so macOS throttles/coalesces its timers.
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   cfg = config.services.tsnixcache-client;
@@ -20,7 +25,12 @@ let
   pushHook = pkgs.writeShellScript "tsnixcache-post-build-hook" ''
     set -u
     [ -n "''${OUT_PATHS:-}" ] || exit 0
-    export PATH=${lib.makeBinPath [ pkgs.nix pkgs.coreutils ]}:''${PATH:-}
+    export PATH=${
+      lib.makeBinPath [
+        pkgs.nix
+        pkgs.coreutils
+      ]
+    }:''${PATH:-}
     if ! ${cfg.package}/bin/tsnixcache push --to ${cfg.postBuildHook.to} --timeout ${cfg.postBuildHook.timeout} $OUT_PATHS; then
       echo "tsnixcache: push to ${cfg.postBuildHook.to} failed after retries; not failing build (watch will retry)" >&2
     fi
@@ -113,8 +123,9 @@ in
 
     # Both push paths shell out to `nix copy`, which needs the nix-command feature.
     nix.settings.post-build-hook = lib.mkIf cfg.postBuildHook.enable "${pushHook}";
-    nix.settings.extra-experimental-features =
-      lib.mkIf (cfg.postBuildHook.enable || cfg.watch.enable) [ "nix-command" ];
+    nix.settings.extra-experimental-features = lib.mkIf (cfg.postBuildHook.enable || cfg.watch.enable) [
+      "nix-command"
+    ];
 
     launchd.daemons.tsnixcache-watch = lib.mkIf cfg.watch.enable {
       serviceConfig = {
@@ -137,7 +148,10 @@ in
         ProcessType = "Background";
         LowPriorityIO = true;
         Nice = 10;
-        EnvironmentVariables.PATH = lib.makeBinPath [ pkgs.nix pkgs.coreutils ];
+        EnvironmentVariables.PATH = lib.makeBinPath [
+          pkgs.nix
+          pkgs.coreutils
+        ];
         StandardOutPath = "/var/log/tsnixcache-watch.log";
         StandardErrorPath = "/var/log/tsnixcache-watch.log";
       };

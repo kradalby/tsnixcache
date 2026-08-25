@@ -1,7 +1,12 @@
 # Copyright (c) 2026 Kristoffer Dalby
 # SPDX-License-Identifier: BSD-3-Clause
 
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   cfg = config.services.tsnixcache;
@@ -28,24 +33,47 @@ let
 
   tsnetType = lib.types.submodule {
     options = {
-      hostname = lib.mkOption { type = lib.types.str; default = "tsnixcache"; description = "Tailscale hostname for this tsnet instance."; };
-      controlUrl = lib.mkOption { type = lib.types.str; default = ""; description = "Tailscale control URL (empty = default)."; };
-      authKeyFile = lib.mkOption { type = lib.types.str; description = "Path to a file containing the Tailscale auth key. Must not be in the Nix store."; };
-      dir = lib.mkOption { type = lib.types.str; description = "State directory for this tsnet instance."; };
-      port = lib.mkOption { type = lib.types.port; default = 80; description = "Port to listen on."; };
-      tls = lib.mkOption { type = lib.types.bool; default = false; description = "Enable TLS. Not supported: tsnixcache serves plain HTTP over the tailnet, so true fails evaluation."; };
+      hostname = lib.mkOption {
+        type = lib.types.str;
+        default = "tsnixcache";
+        description = "Tailscale hostname for this tsnet instance.";
+      };
+      controlUrl = lib.mkOption {
+        type = lib.types.str;
+        default = "";
+        description = "Tailscale control URL (empty = default).";
+      };
+      authKeyFile = lib.mkOption {
+        type = lib.types.str;
+        description = "Path to a file containing the Tailscale auth key. Must not be in the Nix store.";
+      };
+      dir = lib.mkOption {
+        type = lib.types.str;
+        description = "State directory for this tsnet instance.";
+      };
+      port = lib.mkOption {
+        type = lib.types.port;
+        default = 80;
+        description = "Port to listen on.";
+      };
+      tls = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Enable TLS. Not supported: tsnixcache serves plain HTTP over the tailnet, so true fails evaluation.";
+      };
     };
   };
   # The auth key is read from the systemd credential (%d), not from its
   # original path, so the file itself never has to be readable by the service
   # user.
-  tsnetToFlag = i: ts:
-    "hostname=${ts.hostname}" +
-    lib.optionalString (ts.controlUrl != "") ",control=${ts.controlUrl}" +
-    ",authkey-file=%d/${tsnetCred i}" +
-    ",dir=${ts.dir}" +
-    ",port=${toString ts.port}" +
-    ",tls=${lib.boolToString ts.tls}";
+  tsnetToFlag =
+    i: ts:
+    "hostname=${ts.hostname}"
+    + lib.optionalString (ts.controlUrl != "") ",control=${ts.controlUrl}"
+    + ",authkey-file=%d/${tsnetCred i}"
+    + ",dir=${ts.dir}"
+    + ",port=${toString ts.port}"
+    + ",tls=${lib.boolToString ts.tls}";
 
   # db/storeDir/gcrootDir default to null so "set alongside store" can be told
   # from "not set"; the CLI carries the real defaults. The unit still needs
@@ -56,21 +84,30 @@ let
   # In chroot mode the CLI derives the gcroot directory inside the chroot, so
   # only the chroot itself has to exist and be writable.
   chroot = cfg.store != "";
-  writableDirs = [ cfg.spoolDir ]
-    ++ lib.optional (!chroot) gcrootDir
-    ++ lib.optional chroot cfg.store;
+  writableDirs = [
+    cfg.spoolDir
+  ]
+  ++ lib.optional (!chroot) gcrootDir
+  ++ lib.optional chroot cfg.store;
 
   # A "host:port", with the host optionally bracketed for IPv6, so the host is
   # everything before the last colon. Anything without one — including the
   # empty entry that asks for no local listener at all — has no host to judge.
-  listenHost = l:
-    let parts = lib.splitString ":" l;
+  listenHost =
+    l:
+    let
+      parts = lib.splitString ":" l;
     in
-    if lib.length parts < 2 then null
-    else lib.removeSuffix "]" (lib.removePrefix "[" (lib.concatStringsSep ":" (lib.init parts)));
-  isLoopback = l:
-    let h = listenHost l;
-    in h == null || h == "localhost" || h == "::1" || lib.hasPrefix "127." h;
+    if lib.length parts < 2 then
+      null
+    else
+      lib.removeSuffix "]" (lib.removePrefix "[" (lib.concatStringsSep ":" (lib.init parts)));
+  isLoopback =
+    l:
+    let
+      h = listenHost l;
+    in
+    h == null || h == "localhost" || h == "::1" || lib.hasPrefix "127." h;
 
   # An empty entry asks the CLI for no local listener at all, so it is not a
   # listener anything can reach and must not trigger either warning below.
@@ -179,7 +216,10 @@ in
     };
 
     serveCompression = lib.mkOption {
-      type = lib.types.enum [ "none" "zstd" ];
+      type = lib.types.enum [
+        "none"
+        "zstd"
+      ];
       default = "none";
       description = "Compression to use when serving NARs.";
     };
@@ -192,29 +232,40 @@ in
 
     gc = {
       rules = lib.mkOption {
-        type = lib.types.listOf (lib.types.submodule {
-          options = {
-            threshold = lib.mkOption {
-              type = lib.types.ints.between 1 100;
-              description = "Disk usage percentage that triggers this rule.";
-            };
+        type = lib.types.listOf (
+          lib.types.submodule {
+            options = {
+              threshold = lib.mkOption {
+                type = lib.types.ints.between 1 100;
+                description = "Disk usage percentage that triggers this rule.";
+              };
 
-            olderThan = lib.mkOption {
-              type = types.goDurationOrDays;
-              description = ''
-                Minimum age of a pushed path before it may be garbage-collected (e.g. "20d").
-                When the rule triggers, gcroot symlinks older than this are removed, then
-                nix-collect-garbage runs to reclaim the now-unrooted store paths.
-                Paths imported more recently than this duration are always kept.
-              '';
+              olderThan = lib.mkOption {
+                type = types.goDurationOrDays;
+                description = ''
+                  Minimum age of a pushed path before it may be garbage-collected (e.g. "20d").
+                  When the rule triggers, gcroot symlinks older than this are removed, then
+                  nix-collect-garbage runs to reclaim the now-unrooted store paths.
+                  Paths imported more recently than this duration are always kept.
+                '';
+              };
             };
-          };
-        });
+          }
+        );
         default = [ ];
         example = [
-          { threshold = 80; olderThan = "20d"; }
-          { threshold = 90; olderThan = "10d"; }
-          { threshold = 95; olderThan = "5d"; }
+          {
+            threshold = 80;
+            olderThan = "20d";
+          }
+          {
+            threshold = 90;
+            olderThan = "10d";
+          }
+          {
+            threshold = 95;
+            olderThan = "5d";
+          }
         ];
         description = ''
           GC rules: when disk usage exceeds threshold%, prune gcroot symlinks for paths
@@ -254,12 +305,11 @@ in
         assertion = cfg.signKeyFile == null || !(inStore cfg.signKeyFile);
         message = secretLeak "signKeyFile" (toString cfg.signKeyFile);
       }
-    ] ++ lib.imap0
-      (i: ts: {
-        assertion = !(inStore ts.authKeyFile);
-        message = secretLeak "tsnet.${toString i}.authKeyFile" ts.authKeyFile;
-      })
-      cfg.tsnet;
+    ]
+    ++ lib.imap0 (i: ts: {
+      assertion = !(inStore ts.authKeyFile);
+      message = secretLeak "tsnet.${toString i}.authKeyFile" ts.authKeyFile;
+    }) cfg.tsnet;
 
     # Two separate hazards, so two separate warnings: who can read the store,
     # and who can write to it. Both are legitimate behind a firewall or on a
@@ -267,27 +317,28 @@ in
     warnings =
       # Reads are unauthenticated on every listener, by design. On loopback that
       # is the operator's own machine; off it, it is whoever can reach the port.
-      map
-        (l: ''
-          services.tsnixcache.listen has a non-loopback address (${l}). Reads there are
-          unauthenticated, so anything that can reach it can enumerate and download every
-          path this cache serves. Restrict it at the firewall, or serve over tsnet instead.
-        '')
-        exposed
+      map (l: ''
+        services.tsnixcache.listen has a non-loopback address (${l}). Reads there are
+        unauthenticated, so anything that can reach it can enumerate and download every
+        path this cache serves. Restrict it at the firewall, or serve over tsnet instead.
+      '') exposed
       # Writes are refused there by default because nothing identifies the
       # caller; localWrite is the way back to a listener anything can push to,
       # and the service user is a nix trusted user, so it deserves saying out
       # loud what that hands out.
-      ++ lib.optional (cfg.localWrite && localListeners != [ ]) (''
-        services.tsnixcache.localWrite accepts unauthenticated pushes on ${lib.concatStringsSep ", " localListeners}.
-        Every local uid can import arbitrary paths, which are re-signed with the cache
-        key and, at priority ${toString cfg.priority}, shadow the upstream cache for every client that
-        trusts it. Serve over tsnet instead, where writes need the
-        kradalby.no/cap/tsnixcache push grant.
-      '' + lib.optionalString (exposed != [ ]) ''
-        Worse, not all of those are loopback (${lib.concatStringsSep ", " exposed}), so it is not
-        only local uids but anything on the network that can reach the port.
-      '');
+      ++ lib.optional (cfg.localWrite && localListeners != [ ]) (
+        ''
+          services.tsnixcache.localWrite accepts unauthenticated pushes on ${lib.concatStringsSep ", " localListeners}.
+          Every local uid can import arbitrary paths, which are re-signed with the cache
+          key and, at priority ${toString cfg.priority}, shadow the upstream cache for every client that
+          trusts it. Serve over tsnet instead, where writes need the
+          kradalby.no/cap/tsnixcache push grant.
+        ''
+        + lib.optionalString (exposed != [ ]) ''
+          Worse, not all of those are loopback (${lib.concatStringsSep ", " exposed}), so it is not
+          only local uids but anything on the network that can reach the port.
+        ''
+      );
 
     # `tsnixcache key generate` and `key public` are the first thing an
     # operator runs on a cache host.
@@ -316,7 +367,10 @@ in
       # only while another process holds the database open, so the daemon has
       # to be up first — otherwise a fresh boot restart-loops. The daemon also
       # does every import and collection on the service's behalf.
-      after = [ "network.target" "nix-daemon.service" ];
+      after = [
+        "network.target"
+        "nix-daemon.service"
+      ];
       wants = [ "nix-daemon.service" ];
 
       serviceConfig = {
@@ -328,20 +382,61 @@ in
         # stops parsing at the first non-flag argument — silently dropping
         # every flag after it.
         ExecStart = lib.escapeShellArgs (
-          [ "${cfg.package}/bin/tsnixcache" "serve" ]
-          ++ lib.optionals chroot [ "--store" cfg.store ]
-          ++ lib.optionals (cfg.db != null) [ "--db" cfg.db ]
-          ++ lib.optionals (cfg.storeDir != null) [ "--store-dir" cfg.storeDir ]
-          ++ lib.optionals (cfg.gcrootDir != null) [ "--gcroot-dir" cfg.gcrootDir ]
-          ++ lib.optionals (cfg.signKeyFile != null) [ "--sign-key-file" "%d/${signKeyCred}" ]
-          ++ [ "--priority" (toString cfg.priority) ]
-          ++ lib.concatMap (l: [ "--listen" l ]) cfg.listen
+          [
+            "${cfg.package}/bin/tsnixcache"
+            "serve"
+          ]
+          ++ lib.optionals chroot [
+            "--store"
+            cfg.store
+          ]
+          ++ lib.optionals (cfg.db != null) [
+            "--db"
+            cfg.db
+          ]
+          ++ lib.optionals (cfg.storeDir != null) [
+            "--store-dir"
+            cfg.storeDir
+          ]
+          ++ lib.optionals (cfg.gcrootDir != null) [
+            "--gcroot-dir"
+            cfg.gcrootDir
+          ]
+          ++ lib.optionals (cfg.signKeyFile != null) [
+            "--sign-key-file"
+            "%d/${signKeyCred}"
+          ]
+          ++ [
+            "--priority"
+            (toString cfg.priority)
+          ]
+          ++ lib.concatMap (l: [
+            "--listen"
+            l
+          ]) cfg.listen
           ++ lib.optional cfg.localWrite "--local-write"
-          ++ [ "--spool-dir" cfg.spoolDir ]
-          ++ [ "--serve-compression" cfg.serveCompression ]
-          ++ lib.concatLists (lib.imap0 (i: ts: [ "--tsnet" (tsnetToFlag i ts) ]) cfg.tsnet)
-          ++ lib.concatMap (r: [ "--gc-rule" "${toString r.threshold}:${r.olderThan}" ]) cfg.gc.rules
-          ++ lib.optionals (cfg.gc.rules != [ ]) [ "--gc-interval" cfg.gc.interval ]
+          ++ [
+            "--spool-dir"
+            cfg.spoolDir
+          ]
+          ++ [
+            "--serve-compression"
+            cfg.serveCompression
+          ]
+          ++ lib.concatLists (
+            lib.imap0 (i: ts: [
+              "--tsnet"
+              (tsnetToFlag i ts)
+            ]) cfg.tsnet
+          )
+          ++ lib.concatMap (r: [
+            "--gc-rule"
+            "${toString r.threshold}:${r.olderThan}"
+          ]) cfg.gc.rules
+          ++ lib.optionals (cfg.gc.rules != [ ]) [
+            "--gc-interval"
+            cfg.gc.interval
+          ]
         );
         StateDirectory = "tsnixcache";
         CacheDirectory = "tsnixcache";
@@ -366,7 +461,12 @@ in
         AmbientCapabilities = "";
         LockPersonality = true;
         # AF_NETLINK is tsnet's: its link monitor watches route changes.
-        RestrictAddressFamilies = [ "AF_UNIX" "AF_INET" "AF_INET6" "AF_NETLINK" ];
+        RestrictAddressFamilies = [
+          "AF_UNIX"
+          "AF_INET"
+          "AF_INET6"
+          "AF_NETLINK"
+        ];
         SystemCallFilter = [ "@system-service" ];
         ReadWritePaths = writableDirs ++ map (ts: ts.dir) cfg.tsnet;
         ReadOnlyPaths = [
@@ -380,7 +480,14 @@ in
         # external compression, nix for nix-store --import and
         # nix-collect-garbage, coreutils for the preStart script.
         Environment = [
-          "PATH=${lib.makeBinPath [ pkgs.xz pkgs.zstd pkgs.coreutils pkgs.nix ]}"
+          "PATH=${
+            lib.makeBinPath [
+              pkgs.xz
+              pkgs.zstd
+              pkgs.coreutils
+              pkgs.nix
+            ]
+          }"
         ];
 
         Restart = "on-failure";

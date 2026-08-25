@@ -12,6 +12,6 @@ options = ["-w", "-local", "github.com/kradalby/tsnixcache"]
 includes = ["*.go"]
 needs = ["gofumpt"]
 
-[formatter.nixpkgs-fmt]
-command = "nixpkgs-fmt"
+[formatter.nixfmt]
+command = "nixfmt"
 includes = ["*.nix"]

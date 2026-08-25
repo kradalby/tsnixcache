@@ -2,7 +2,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 # Post-build-hook (primary) and watch (fallback) enabled together.
-{ pkgs, tsnixcache, tsnixcacheModule, tsnixcacheClientModule }:
+{
+  pkgs,
+  tsnixcache,
+  tsnixcacheModule,
+  tsnixcacheClientModule,
+}:
 
 let
   common = import ./push-common.nix { inherit pkgs tsnixcache tsnixcacheModule; };

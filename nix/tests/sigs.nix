@@ -11,7 +11,11 @@
 #
 # The pushed path deliberately references itself: that is the shape that broke
 # signing before, and it is the shape of nearly every real package.
-{ pkgs, tsnixcache, tsnixcacheModule }:
+{
+  pkgs,
+  tsnixcache,
+  tsnixcacheModule,
+}:
 
 let
   common = import ./push-common.nix { inherit pkgs tsnixcache tsnixcacheModule; };
@@ -20,11 +24,18 @@ in
   name = "tsnixcache-sigs";
 
   nodes = {
-    server = { config, pkgs, lib, ... }: {
-      imports = [ common.serverNode ];
-      # hello is in the server's store, so it can be served without a push.
-      environment.systemPackages = [ pkgs.hello ];
-    };
+    server =
+      {
+        config,
+        pkgs,
+        lib,
+        ...
+      }:
+      {
+        imports = [ common.serverNode ];
+        # hello is in the server's store, so it can be served without a push.
+        environment.systemPackages = [ pkgs.hello ];
+      };
 
     pusher = { config, pkgs, ... }: {
       environment.systemPackages = [ pkgs.nix ];
@@ -39,14 +50,21 @@ in
       };
     };
 
-    consumer = { config, pkgs, lib, ... }: {
-      nix.settings = {
-        substituters = lib.mkForce [ "http://server:5000" ];
-        # Only tsnixcache is trusted, and signatures are mandatory.
-        trusted-public-keys = lib.mkForce [ common.publicKey ];
-        require-sigs = true;
+    consumer =
+      {
+        config,
+        pkgs,
+        lib,
+        ...
+      }:
+      {
+        nix.settings = {
+          substituters = lib.mkForce [ "http://server:5000" ];
+          # Only tsnixcache is trusted, and signatures are mandatory.
+          trusted-public-keys = lib.mkForce [ common.publicKey ];
+          require-sigs = true;
+        };
       };
-    };
   };
 
   testScript = ''

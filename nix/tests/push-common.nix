@@ -2,7 +2,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 # Shared pieces for the auto-push tests (post-build-hook, watch, and both).
-{ pkgs, tsnixcache, tsnixcacheModule }:
+{
+  pkgs,
+  tsnixcache,
+  tsnixcacheModule,
+}:
 rec {
   # Matching keypair for the test cache.
   keyName = "tsnixcache-test";
@@ -36,7 +40,11 @@ rec {
   '';
 
   # Store paths the client must hold so the builds above run offline.
-  buildInputs = [ buildExpr selfRefExpr builder ];
+  buildInputs = [
+    buildExpr
+    selfRefExpr
+    builder
+  ];
 
   # The signing key as an operator would deploy it: root-owned and mode 0400,
   # unreadable by the tsnixcache user. The service only gets at it because the
@@ -50,19 +58,32 @@ rec {
   };
 
   # A signed cache server with the service user trusted so it can import pushes.
-  serverNode = { config, pkgs, lib, ... }: {
-    imports = [ tsnixcacheModule keyFileConfig ];
-    services.tsnixcache = {
-      enable = true;
-      package = tsnixcache;
-      listen = [ "0.0.0.0:5000" ];
-      # Every test built on this node pushes over that plain listener, which
-      # carries no identity and so refuses writes unless asked. The refusal
-      # itself is what nix/tests/push.nix asserts.
-      localWrite = true;
-      signKeyFile = keyFile;
+  serverNode =
+    {
+      config,
+      pkgs,
+      lib,
+      ...
+    }:
+    {
+      imports = [
+        tsnixcacheModule
+        keyFileConfig
+      ];
+      services.tsnixcache = {
+        enable = true;
+        package = tsnixcache;
+        listen = [ "0.0.0.0:5000" ];
+        # Every test built on this node pushes over that plain listener, which
+        # carries no identity and so refuses writes unless asked. The refusal
+        # itself is what nix/tests/push.nix asserts.
+        localWrite = true;
+        signKeyFile = keyFile;
+      };
+      nix.settings.trusted-users = [
+        "root"
+        "tsnixcache"
+      ];
+      networking.firewall.allowedTCPPorts = [ 5000 ];
     };
-    nix.settings.trusted-users = [ "root" "tsnixcache" ];
-    networking.firewall.allowedTCPPorts = [ 5000 ];
-  };
 }

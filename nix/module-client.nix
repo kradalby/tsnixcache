@@ -1,7 +1,12 @@
 # Copyright (c) 2026 Kristoffer Dalby
 # SPDX-License-Identifier: BSD-3-Clause
 
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   cfg = config.services.tsnixcache-client;
@@ -19,7 +24,12 @@ let
   pushHook = pkgs.writeShellScript "tsnixcache-post-build-hook" ''
     set -u
     [ -n "''${OUT_PATHS:-}" ] || exit 0
-    export PATH=${lib.makeBinPath [ pkgs.nix pkgs.coreutils ]}:''${PATH:-}
+    export PATH=${
+      lib.makeBinPath [
+        pkgs.nix
+        pkgs.coreutils
+      ]
+    }:''${PATH:-}
     if ! ${cfg.package}/bin/tsnixcache push --to ${cfg.postBuildHook.to} --timeout ${cfg.postBuildHook.timeout} $OUT_PATHS; then
       echo "tsnixcache: push to ${cfg.postBuildHook.to} failed after retries; not failing build (watch will retry)" >&2
     fi
@@ -101,13 +111,17 @@ in
 
     # Both push paths shell out to `nix copy`, which needs the nix-command feature.
     nix.settings.post-build-hook = lib.mkIf cfg.postBuildHook.enable "${pushHook}";
-    nix.settings.extra-experimental-features =
-      lib.mkIf (cfg.postBuildHook.enable || cfg.watch.enable) [ "nix-command" ];
+    nix.settings.extra-experimental-features = lib.mkIf (cfg.postBuildHook.enable || cfg.watch.enable) [
+      "nix-command"
+    ];
 
     systemd.services.tsnixcache-watch = lib.mkIf cfg.watch.enable {
       description = "tsnixcache watch — auto-push new Nix store paths";
       wantedBy = [ "multi-user.target" ];
-      after = [ "network.target" "nix-daemon.service" ];
+      after = [
+        "network.target"
+        "nix-daemon.service"
+      ];
 
       serviceConfig = {
         ExecStart = lib.escapeShellArgs [
@@ -130,7 +144,12 @@ in
         # writable cache dir (ProtectHome makes the default ~/.cache read-only).
         CacheDirectory = "tsnixcache-watch";
         Environment = [
-          "PATH=${lib.makeBinPath [ pkgs.nix pkgs.coreutils ]}"
+          "PATH=${
+            lib.makeBinPath [
+              pkgs.nix
+              pkgs.coreutils
+            ]
+          }"
           "XDG_CACHE_HOME=/var/cache/tsnixcache-watch"
         ];
         Restart = "on-failure";
@@ -142,7 +161,12 @@ in
         CapabilityBoundingSet = "";
         AmbientCapabilities = "";
         LockPersonality = true;
-        RestrictAddressFamilies = [ "AF_UNIX" "AF_INET" "AF_INET6" "AF_NETLINK" ];
+        RestrictAddressFamilies = [
+          "AF_UNIX"
+          "AF_INET"
+          "AF_INET6"
+          "AF_NETLINK"
+        ];
         SystemCallFilter = [ "@system-service" ];
         ReadOnlyPaths = [
           cfg.watch.storeDir

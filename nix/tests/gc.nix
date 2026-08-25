@@ -10,7 +10,11 @@
 # suite sets gc.rules, so both halves of that arrangement — a collection that
 # really happens, and a fresh gcroot that really protects a path from it — are
 # invisible outside this test.
-{ pkgs, tsnixcache, tsnixcacheModule }:
+{
+  pkgs,
+  tsnixcache,
+  tsnixcacheModule,
+}:
 
 {
   name = "tsnixcache-gc";
@@ -29,7 +33,12 @@
           # would race a live import and quietly defeat the whole
           # gcroot-before-import design, so nothing here may depend on a root
           # ageing out.
-          rules = [{ threshold = 1; olderThan = "20d"; }];
+          rules = [
+            {
+              threshold = 1;
+              olderThan = "20d";
+            }
+          ];
           interval = "5s";
         };
       };
