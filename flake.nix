@@ -30,6 +30,21 @@
       tsnixcacheClientDarwinModule = import ./nix/module-client-darwin.nix;
 
       fc = flake-checks.lib;
+
+      # treefmt runs gofumpt and goimports inside a sandbox with no network.
+      # goimports ships wrapped with a `go` on PATH, and GOTOOLCHAIN=auto makes
+      # that `go` fetch a toolchain whenever it is older than the go.mod
+      # directive — a fetch the sandbox cannot do, so the formatting check dies
+      # rather than reporting a diff. nixpkgs' bare `go` is still 1.26, so both
+      # tools have to be built against go_latest to stay ahead of `go 1.27.0`.
+      goToolsOverlay = final: prev: {
+        gofumpt = prev.gofumpt.override { buildGoModule = final.buildGoLatestModule; };
+        gotools = prev.gotools.override {
+          buildGoModule = final.buildGoLatestModule;
+          go = final.go_latest;
+        };
+      };
+
       version = "0.1.0";
       # GET /version serves cache.Version, which stays "dev" unless the linker
       # sets it. A dirty tree has no shortRev, and dirtyShortRev changes on
@@ -42,7 +57,7 @@
         root = ./.;
         pname = "tsnixcache";
         vendorHash = (builtins.fromJSON (builtins.readFile ./flakehashes.json)).vendor.sri;
-        goPkg = pkgs.go_1_26;
+        goPkg = pkgs.go_latest;
         subPackages = [ "cmd/tsnixcache" ];
         env = { CGO_ENABLED = "0"; };
         ldflags = [ "-X github.com/kradalby/tsnixcache/cache.Version=${version}-${rev}" ];
@@ -98,7 +113,10 @@
       };
     } // flake-utils.lib.eachDefaultSystem (system:
       let
-        pkgs = import nixpkgs { inherit system; };
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [ goToolsOverlay ];
+        };
         common = commonFor pkgs;
         tsnixcache = tsnixcacheFor pkgs;
 
@@ -147,7 +165,7 @@
 
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
-            go_1_26
+            go_latest
             golangci-lint
             gofumpt
             gotools
@@ -276,7 +294,7 @@
           });
           golangci-lint = fc.goLint common;
           formatting = fc.goFormat common;
-        } // pkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
+        } // pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
           # NixOS VM tests: guest closures are Linux-only, so on darwin these
           # would ask for a full aarch64-linux system plus apple-virt and make
           # `nix flake check` unusable on the platform the darwin module ships

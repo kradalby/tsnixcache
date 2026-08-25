@@ -12,6 +12,9 @@ linters:
     # Too strict
     - wrapcheck
     - exhaustruct
+    # exhaustruct's current name. Disabling only the old one silently re-enables
+    # the linter under `default: all` once golangci-lint renames it.
+    - exhaustruct_v5
     - ireturn
     - varnamelen
     - godox
@@ -96,7 +99,8 @@ formatters:
 
   settings:
     gofumpt:
-      extra-rules: true
+      extra:
+        group-params: true
     goimports:
       local-prefixes:
         - github.com/kradalby/tsnixcache

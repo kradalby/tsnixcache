@@ -1210,8 +1210,7 @@ func (srv *Server) handlePutNar(w http.ResponseWriter, r *http.Request) {
 // path the failure belongs to, without which the log says only that some upload
 // broke.
 func (srv *Server) writeBodyError(w http.ResponseWriter, msg string, err error, attrs ...any) {
-	var maxErr *http.MaxBytesError
-	if errors.As(err, &maxErr) {
+	if maxErr, ok := errors.AsType[*http.MaxBytesError](err); ok {
 		// An oversized upload is the client's fault rather than ours, so warn
 		// rather than error — but it still has to leave a trace. The client only
 		// learns "413", and without this line the operator it complains to has
