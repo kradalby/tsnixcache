@@ -356,8 +356,10 @@
           formatting = fc.goFormat common;
         }
         // pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
-          readme-lifecycle = pkgs.testers.nixosTest (
-            import ./nix/tests/readme-lifecycle.nix { inherit pkgs tsnixcache tsnixcacheModule; }
+          github-actions-lifecycle = pkgs.testers.nixosTest (
+            import ./nix/tests/github-actions-lifecycle.nix {
+              inherit pkgs tsnixcache tsnixcacheModule;
+            }
           );
           # NixOS VM tests: guest closures are Linux-only, so on darwin these
           # would ask for a full aarch64-linux system plus apple-virt and make
