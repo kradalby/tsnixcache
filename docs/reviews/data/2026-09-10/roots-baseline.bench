@@ -1,0 +1,70 @@
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/niximport
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkGCRootDurability/create-4         	      10	   6672571 ns/op	    2056 B/op	      19 allocs/op
+BenchmarkGCRootDurability/refresh-4        	      10	   6775555 ns/op	    1952 B/op	      17 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/niximport
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkGCRootDurability/create-4         	      10	   6051479 ns/op	    2056 B/op	      19 allocs/op
+BenchmarkGCRootDurability/refresh-4        	      10	   5829682 ns/op	    1952 B/op	      17 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/niximport
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkGCRootDurability/create-4         	      10	   5923686 ns/op	    2056 B/op	      19 allocs/op
+BenchmarkGCRootDurability/refresh-4        	      10	   6068858 ns/op	    2009 B/op	      17 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/niximport
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkGCRootDurability/create-4         	      10	   6207842 ns/op	    2168 B/op	      19 allocs/op
+BenchmarkGCRootDurability/refresh-4        	      10	   6059975 ns/op	    1952 B/op	      17 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/niximport
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkGCRootDurability/create-4         	      10	   6076765 ns/op	    2112 B/op	      19 allocs/op
+BenchmarkGCRootDurability/refresh-4        	      10	   5924441 ns/op	    2009 B/op	      17 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/niximport
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkGCRootDurability/create-4         	      10	   4177481 ns/op	    2112 B/op	      19 allocs/op
+BenchmarkGCRootDurability/refresh-4        	      10	   3565999 ns/op	    1952 B/op	      17 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/niximport
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkGCRootDurability/create-4         	      10	   5789604 ns/op	    2056 B/op	      19 allocs/op
+BenchmarkGCRootDurability/refresh-4        	      10	   6133697 ns/op	    2009 B/op	      17 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/niximport
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkGCRootDurability/create-4         	      10	   6139741 ns/op	    2112 B/op	      19 allocs/op
+BenchmarkGCRootDurability/refresh-4        	      10	   5878873 ns/op	    1952 B/op	      17 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/niximport
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkGCRootDurability/create-4         	      10	   6630796 ns/op	    2112 B/op	      19 allocs/op
+BenchmarkGCRootDurability/refresh-4        	      10	   6070133 ns/op	    2009 B/op	      17 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/niximport
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkGCRootDurability/create-4         	      10	   5599236 ns/op	    2112 B/op	      19 allocs/op
+BenchmarkGCRootDurability/refresh-4        	      10	   5841245 ns/op	    1952 B/op	      17 allocs/op
+PASS

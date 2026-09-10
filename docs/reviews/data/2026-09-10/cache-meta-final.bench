@@ -1,0 +1,90 @@
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkNarInfoZstd/low/head-4    	   55714	      2356 ns/op	    1816 B/op	      24 allocs/op
+BenchmarkNarInfoZstd/low/warm-4    	   19826	      5998 ns/op	     65536 charged-B	      3775 compressed-B	    3032 B/op	      31 allocs/op
+BenchmarkNarInfoZstd/high/head-4   	   50988	      2394 ns/op	    1816 B/op	      24 allocs/op
+BenchmarkNarInfoZstd/high/warm-4   	   21592	      5767 ns/op	  33619968 charged-B	  33555464 compressed-B	    3064 B/op	      31 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkNarInfoZstd/low/head-4    	   51039	      2213 ns/op	    1816 B/op	      24 allocs/op
+BenchmarkNarInfoZstd/low/warm-4    	   19735	      5696 ns/op	     65536 charged-B	      3775 compressed-B	    3032 B/op	      31 allocs/op
+BenchmarkNarInfoZstd/high/head-4   	   48337	      2179 ns/op	    1816 B/op	      24 allocs/op
+BenchmarkNarInfoZstd/high/warm-4   	   21147	      5312 ns/op	  33619968 charged-B	  33555464 compressed-B	    3032 B/op	      31 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkNarInfoZstd/low/head-4    	   55256	      2123 ns/op	    1816 B/op	      24 allocs/op
+BenchmarkNarInfoZstd/low/warm-4    	   18589	      5846 ns/op	     65536 charged-B	      3775 compressed-B	    3016 B/op	      31 allocs/op
+BenchmarkNarInfoZstd/high/head-4   	   46765	      2331 ns/op	    1816 B/op	      24 allocs/op
+BenchmarkNarInfoZstd/high/warm-4   	   22118	      6476 ns/op	  33619968 charged-B	  33555464 compressed-B	    3064 B/op	      31 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkNarInfoZstd/low/head-4    	   54914	      2259 ns/op	    1816 B/op	      24 allocs/op
+BenchmarkNarInfoZstd/low/warm-4    	   21877	      5346 ns/op	     65536 charged-B	      3775 compressed-B	    3032 B/op	      31 allocs/op
+BenchmarkNarInfoZstd/high/head-4   	   50254	      2343 ns/op	    1816 B/op	      24 allocs/op
+BenchmarkNarInfoZstd/high/warm-4   	   23288	      5760 ns/op	  33619968 charged-B	  33555464 compressed-B	    3064 B/op	      31 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkNarInfoZstd/low/head-4    	   56372	      2421 ns/op	    1816 B/op	      24 allocs/op
+BenchmarkNarInfoZstd/low/warm-4    	   20670	      4961 ns/op	     65536 charged-B	      3775 compressed-B	    3016 B/op	      31 allocs/op
+BenchmarkNarInfoZstd/high/head-4   	   55839	      2515 ns/op	    1816 B/op	      24 allocs/op
+BenchmarkNarInfoZstd/high/warm-4   	   20054	      5329 ns/op	  33619968 charged-B	  33555464 compressed-B	    3064 B/op	      31 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkNarInfoZstd/low/head-4    	   45552	      2429 ns/op	    1816 B/op	      24 allocs/op
+BenchmarkNarInfoZstd/low/warm-4    	   20426	      6929 ns/op	     65536 charged-B	      3775 compressed-B	    3016 B/op	      31 allocs/op
+BenchmarkNarInfoZstd/high/head-4   	   44361	      2549 ns/op	    1816 B/op	      24 allocs/op
+BenchmarkNarInfoZstd/high/warm-4   	   23932	      5776 ns/op	  33619968 charged-B	  33555464 compressed-B	    3064 B/op	      31 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkNarInfoZstd/low/head-4    	   55886	      2171 ns/op	    1816 B/op	      24 allocs/op
+BenchmarkNarInfoZstd/low/warm-4    	   20374	      6339 ns/op	     65536 charged-B	      3775 compressed-B	    3032 B/op	      31 allocs/op
+BenchmarkNarInfoZstd/high/head-4   	   47678	      2364 ns/op	    1816 B/op	      24 allocs/op
+BenchmarkNarInfoZstd/high/warm-4   	   21116	      5891 ns/op	  33619968 charged-B	  33555464 compressed-B	    3064 B/op	      31 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkNarInfoZstd/low/head-4    	   56346	      2099 ns/op	    1816 B/op	      24 allocs/op
+BenchmarkNarInfoZstd/low/warm-4    	   22086	      5615 ns/op	     65536 charged-B	      3775 compressed-B	    3016 B/op	      31 allocs/op
+BenchmarkNarInfoZstd/high/head-4   	   45104	      2236 ns/op	    1816 B/op	      24 allocs/op
+BenchmarkNarInfoZstd/high/warm-4   	   22651	      6725 ns/op	  33619968 charged-B	  33555464 compressed-B	    3064 B/op	      31 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkNarInfoZstd/low/head-4    	   46105	      2563 ns/op	    1816 B/op	      24 allocs/op
+BenchmarkNarInfoZstd/low/warm-4    	   23779	      5604 ns/op	     65536 charged-B	      3775 compressed-B	    3032 B/op	      31 allocs/op
+BenchmarkNarInfoZstd/high/head-4   	   54625	      2620 ns/op	    1816 B/op	      24 allocs/op
+BenchmarkNarInfoZstd/high/warm-4   	   21943	      5330 ns/op	  33619968 charged-B	  33555464 compressed-B	    3064 B/op	      31 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkNarInfoZstd/low/head-4    	   50336	      2309 ns/op	    1816 B/op	      24 allocs/op
+BenchmarkNarInfoZstd/low/warm-4    	   22734	      5171 ns/op	     65536 charged-B	      3775 compressed-B	    3016 B/op	      31 allocs/op
+BenchmarkNarInfoZstd/high/head-4   	   53340	      2353 ns/op	    1816 B/op	      24 allocs/op
+BenchmarkNarInfoZstd/high/warm-4   	   23214	      5369 ns/op	  33619968 charged-B	  33555464 compressed-B	    3064 B/op	      31 allocs/op
+PASS

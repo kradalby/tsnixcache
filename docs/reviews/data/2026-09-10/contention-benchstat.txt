@@ -1,0 +1,31 @@
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+                                   │ /tmp/tsnixcache-contention-baseline.bench │ /tmp/tsnixcache-contention-final.bench │
+                                   │                  sec/op                   │     sec/op      vs base                │
+ZstdEvictionParallelLookups/500-4                                 3.143m ± 12%     1.673m ± 36%  -46.76% (p=0.001 n=10)
+ZstdEvictionParallelLookups/2000-4                               24.252m ±  4%     5.645m ±  5%  -76.73% (p=0.000 n=10)
+ZstdEvictionParallelLookups/8000-4                               323.60m ±  5%     22.68m ±  8%  -92.99% (p=0.000 n=10)
+geomean                                                           29.11m           5.984m        -79.44%
+
+                                   │ /tmp/tsnixcache-contention-baseline.bench │  /tmp/tsnixcache-contention-final.bench   │
+                                   │             lookup-max-sec/op             │ lookup-max-sec/op  vs base                │
+ZstdEvictionParallelLookups/500-4                                2529.0µ ± 13%        423.4µ ± 79%  -83.26% (p=0.000 n=10)
+ZstdEvictionParallelLookups/2000-4                              23607.3µ ±  4%        341.2µ ± 55%  -98.55% (p=0.000 n=10)
+ZstdEvictionParallelLookups/8000-4                             323114.6µ ±  5%        322.3µ ± 50%  -99.90% (p=0.000 n=10)
+geomean                                                           26.82m              359.8µ        -98.66%
+
+                                   │ /tmp/tsnixcache-contention-baseline.bench │ /tmp/tsnixcache-contention-final.bench │
+                                   │                   B/op                    │      B/op       vs base                │
+ZstdEvictionParallelLookups/500-4                                 193.8Ki ± 0%     161.8Ki ± 2%  -16.51% (p=0.000 n=10)
+ZstdEvictionParallelLookups/2000-4                                293.2Ki ± 0%     242.7Ki ± 1%  -17.23% (p=0.000 n=10)
+ZstdEvictionParallelLookups/8000-4                                691.4Ki ± 0%     572.1Ki ± 0%  -17.26% (p=0.000 n=10)
+geomean                                                           339.9Ki          282.1Ki       -17.00%
+
+                                   │ /tmp/tsnixcache-contention-baseline.bench │ /tmp/tsnixcache-contention-final.bench │
+                                   │                 allocs/op                 │   allocs/op     vs base                │
+ZstdEvictionParallelLookups/500-4                                  1.781k ± 0%      2.352k ± 2%  +32.03% (p=0.000 n=10)
+ZstdEvictionParallelLookups/2000-4                                 4.028k ± 0%      3.083k ± 1%  -23.46% (p=0.000 n=10)
+ZstdEvictionParallelLookups/8000-4                                13.026k ± 0%      6.098k ± 1%  -53.19% (p=0.000 n=10)
+geomean                                                            4.538k           3.536k       -22.08%
