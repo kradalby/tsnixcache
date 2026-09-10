@@ -8,7 +8,7 @@
 }:
 let
   common = import ./push-common.nix { inherit pkgs tsnixcache tsnixcacheModule; };
-  blocks = pkgs.lib.splitString "```bash\n" (builtins.readFile ../../README.md);
+  blocks = pkgs.lib.splitString "```bash\n" (builtins.readFile ../../docs/github-actions.md);
   block = builtins.head (builtins.filter (pkgs.lib.hasInfix "session=$(mktemp") blocks);
   recipe = pkgs.writeShellScript "readme-ci" (builtins.head (pkgs.lib.splitString "```" block));
   resolvePackage = pkgs.writeShellScriptBin "nix" ''
@@ -21,7 +21,7 @@ let
   '';
 in
 {
-  name = "tsnixcache-readme-lifecycle";
+  name = "tsnixcache-github-actions-lifecycle";
   nodes.server = common.serverNode;
   nodes.client = { ... }: {
     environment.systemPackages = [
