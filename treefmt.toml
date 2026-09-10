@@ -1,0 +1,33 @@
+[global]
+on-unmatched = "ignore"
+excludes = [".claude/**", "docs/plans/**", "docs/superpowers/**"]
+
+[formatter.gofumpt]
+command = "gofumpt"
+options = ["-w"]
+includes = ["*.go"]
+
+[formatter.goimports]
+command = "goimports"
+options = ["-w", "-local", "github.com/kradalby/tsnixcache"]
+includes = ["*.go"]
+needs = ["gofumpt"]
+
+[formatter.nixfmt]
+command = "nixfmt"
+includes = ["*.nix"]
+
+[formatter.prettier]
+command = "prettier"
+options = ["--write"]
+includes = ["*.css", "*.html", "*.js", "*.json", "*.jsx", "*.md", "*.mdx", "*.scss", "*.ts", "*.tsx", "*.vue", "*.yaml", "*.yml"]
+
+[formatter.shfmt]
+command = "shfmt"
+options = ["-w", "-i", "2", "-ci"]
+includes = ["*.sh"]
+
+[formatter.ruff]
+command = "ruff"
+options = ["format"]
+includes = ["*.py"]

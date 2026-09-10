@@ -1,0 +1,65 @@
+name: test
+
+on:
+  push:
+    branches: [main, initial]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  # Garnix runs x86 Linux and the VM suite. These runners cover native ARM.
+  native:
+    name: native (${{ matrix.system }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            system: aarch64-darwin
+          - runner: ubuntu-24.04-arm
+            system: aarch64-linux
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: NixOS/nix-installer-action@6b8548fe06acfb0155a50ab5d561accb215764cc # main
+        with:
+          extra-conf: |
+            max-jobs = 1
+            cores = 2
+      - name: native build, race, lint, formatting and generation checks
+        run: nix build --fallback -L .#nativeChecks
+      - name: contributor hooks for lock-only and source changes
+        run: |
+          nix develop --command prek run --files flake.lock
+          nix develop --command prek run --files cmd/tsnixcache/main.go
+          nix develop --command prek run --all-files
+      - name: build Darwin example module
+        if: matrix.system == 'aarch64-darwin'
+        run: nix build --fallback -L .#darwinConfigurations.example.system
+      # This test owns Nix's single post-build-hook slot.
+      - name: functional Darwin hook and watcher lifecycle
+        if: matrix.system == 'aarch64-darwin'
+        run: nix develop --command ./nix/tests/darwin-push-test.sh
+      - name: diagnose Linux runner failures
+        if: failure() && runner.os == 'Linux'
+        run: |
+          df -h / /nix
+          free -h
+          sudo journalctl -u nix-daemon.service --no-pager -n 200
+          sudo journalctl -k --no-pager -n 100
+      - name: diagnose Darwin runner failures
+        if: failure() && runner.os == 'macOS'
+        run: |
+          df -h / /nix
+          vm_stat
+          sysctl vm.swapusage
+          sudo launchctl print system/org.nixos.nix-daemon || true
+          sudo plutil -p /Library/LaunchDaemons/org.nixos.nix-daemon.plist || true
+          sudo tail -n 200 /var/log/nix-daemon.log || true

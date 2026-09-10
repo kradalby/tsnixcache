@@ -1,0 +1,111 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: all
+  enable:
+    - wsl_v5
+
+  disable:
+    # Too strict
+    - wrapcheck
+    - exhaustruct
+    # exhaustruct's current name. Disabling only the old one silently re-enables
+    # the linter under `default: all` once golangci-lint renames it.
+    - exhaustruct_v5
+    - ireturn
+    - varnamelen
+    - godox
+    # Deprecated, replaced by wsl_v5
+    - wsl
+    # Deprecated, replaced by gomodguard_v2
+    - gomodguard
+    # Requires explicit allow-list config
+    - depguard
+    # In headscale/sfiber
+    - mnd
+    - nestif
+    - paralleltest
+    - testpackage
+    - tagliatelle
+    - gochecknoglobals
+    - gochecknoinits
+    - forcetypeassert
+    - funlen
+    - gocognit
+
+  settings:
+    wsl_v5:
+      allow-first-in-block: true
+      allow-whole-block: false
+      branch-max-lines: 2
+    revive:
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: error-return
+        - name: error-strings
+        - name: exported
+    cyclop:
+      max-complexity: 15
+    gocognit:
+      min-complexity: 20
+    funlen:
+      lines: 100
+      statements: 50
+    lll:
+      line-length: 120
+    errcheck:
+      exclude-functions:
+        - "(*os.File).Close"
+        # Same class as os.File: closing a directory handle opened for reading
+        # has nothing to report.
+        - "(*os.Root).Close"
+        - "(*database/sql.Rows).Close"
+        - "(*database/sql.DB).Close"
+        - "(*database/sql.Stmt).Close"
+        - "(*io.PipeReader).Close"
+        - "(*io.PipeWriter).Close"
+        - "(io.ReadCloser).Close"
+        - "(io.WriteCloser).Close"
+        - "(*github.com/fsnotify/fsnotify.Watcher).Close"
+        - "(*github.com/kradalby/tsnixcache/store.Store).Close"
+        - "fmt.Fprintf"
+        - "fmt.Fprint"
+        - "fmt.Fprintln"
+        - "os.Remove"
+    goimports:
+      local-prefixes:
+        - github.com/kradalby/tsnixcache
+
+  exclusions:
+    generated: strict
+    rules:
+      - path: _test\.go
+        linters:
+          - funlen
+          - gocognit
+          - cyclop
+          - errcheck
+          - unparam
+          - lll
+
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+
+  settings:
+    gofumpt:
+      extra:
+        group-params: true
+    goimports:
+      local-prefixes:
+        - github.com/kradalby/tsnixcache
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0

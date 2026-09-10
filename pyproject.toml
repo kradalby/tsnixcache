@@ -1,0 +1,12 @@
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+include = ["nix/tests/*.py"]
+
+[tool.ruff.lint]
+extend-select = ["ANN", "UP", "SIM", "B", "I"]
+
+[tool.pyright]
+include = ["nix/tests/*.py"]
+typeCheckingMode = "strict"
+pythonVersion = "3.14"
