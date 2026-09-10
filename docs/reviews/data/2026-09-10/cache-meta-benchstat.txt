@@ -1,0 +1,48 @@
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+                        │ /tmp/tsnixcache-cache-meta-baseline.bench │ /tmp/tsnixcache-cache-meta-final.bench │
+                        │                  sec/op                   │     sec/op      vs base                │
+NarInfoZstd/low/head-4                                 2.193µ ± 11%     2.284µ ±  7%        ~ (p=0.529 n=10)
+NarInfoZstd/low/warm-4                                 3.708µ ± 16%     5.656µ ± 12%  +52.52% (p=0.000 n=10)
+NarInfoZstd/high/head-4                                2.244µ ±  5%     2.359µ ±  8%   +5.13% (p=0.008 n=10)
+NarInfoZstd/high/warm-4                                3.652µ ± 13%     5.764µ ± 12%  +57.82% (p=0.000 n=10)
+geomean                                                2.857µ           3.640µ        +27.42%
+
+                        │ /tmp/tsnixcache-cache-meta-baseline.bench │ /tmp/tsnixcache-cache-meta-final.bench │
+                        │                   B/op                    │     B/op       vs base                 │
+NarInfoZstd/low/head-4                                 1.773Ki ± 0%    1.773Ki ± 0%       ~ (p=1.000 n=10) ¹
+NarInfoZstd/low/warm-4                                 2.969Ki ± 1%    2.953Ki ± 0%  -0.53% (p=0.014 n=10)
+NarInfoZstd/high/head-4                                1.773Ki ± 0%    1.773Ki ± 0%       ~ (p=1.000 n=10) ¹
+NarInfoZstd/high/warm-4                                3.000Ki ± 1%    2.992Ki ± 0%       ~ (p=0.067 n=10)
+geomean                                                2.301Ki         2.296Ki       -0.20%
+¹ all samples are equal
+
+                        │ /tmp/tsnixcache-cache-meta-baseline.bench │ /tmp/tsnixcache-cache-meta-final.bench │
+                        │                 allocs/op                 │  allocs/op    vs base                  │
+NarInfoZstd/low/head-4                                   24.00 ± 0%     24.00 ± 0%        ~ (p=1.000 n=10) ¹
+NarInfoZstd/low/warm-4                                   28.00 ± 0%     31.00 ± 0%  +10.71% (p=0.000 n=10)
+NarInfoZstd/high/head-4                                  24.00 ± 0%     24.00 ± 0%        ~ (p=1.000 n=10) ¹
+NarInfoZstd/high/warm-4                                  28.00 ± 0%     31.00 ± 0%  +10.71% (p=0.000 n=10)
+geomean                                                  25.92          27.28        +5.22%
+¹ all samples are equal
+
+                        │ /tmp/tsnixcache-cache-meta-baseline.bench │
+                        │               cache-data-B                │
+NarInfoZstd/low/warm-4                                 3.687Ki ± 0%
+NarInfoZstd/high/warm-4                                32.00Mi ± 0%
+geomean                                                347.6Ki
+
+                        │ /tmp/tsnixcache-cache-meta-baseline.bench │ /tmp/tsnixcache-cache-meta-final.bench │
+                        │               compressed-B                │ compressed-B   vs base                 │
+NarInfoZstd/low/warm-4                                 3.687Ki ± 0%    3.687Ki ± 0%       ~ (p=1.000 n=10) ¹
+NarInfoZstd/high/warm-4                                32.00Mi ± 0%    32.00Mi ± 0%       ~ (p=1.000 n=10) ¹
+geomean                                                347.6Ki         347.6Ki       +0.00%
+¹ all samples are equal
+
+                        │ /tmp/tsnixcache-cache-meta-final.bench │
+                        │               charged-B                │
+NarInfoZstd/low/warm-4                              64.00Ki ± 0%
+NarInfoZstd/high/warm-4                             32.06Mi ± 0%
+geomean                                             1.416Mi

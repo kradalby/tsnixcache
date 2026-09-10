@@ -1,0 +1,90 @@
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkNarInfoZstdConcurrent/low/same-4    	       3	  10303336 ns/op	      3775 cache-data-B	 6806365 B/op	    1368 allocs/op
+BenchmarkNarInfoZstdConcurrent/low/distinct-4         	       3	  33013741 ns/op	     30200 cache-data-B	53204290 B/op	    7472 allocs/op
+BenchmarkNarInfoZstdConcurrent/high/same-4            	       3	  32101503 ns/op	  33555464 cache-data-B	 7127896 B/op	    1345 allocs/op
+BenchmarkNarInfoZstdConcurrent/high/distinct-4        	       3	  90115272 ns/op	 268443712 cache-data-B	56002632 B/op	    7375 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkNarInfoZstdConcurrent/low/same-4    	       3	  10740610 ns/op	      3775 cache-data-B	 6891413 B/op	    1366 allocs/op
+BenchmarkNarInfoZstdConcurrent/low/distinct-4         	       3	  34114974 ns/op	     30200 cache-data-B	53404488 B/op	    7479 allocs/op
+BenchmarkNarInfoZstdConcurrent/high/same-4            	       3	  31770167 ns/op	  33555464 cache-data-B	 7309656 B/op	    1362 allocs/op
+BenchmarkNarInfoZstdConcurrent/high/distinct-4        	       3	  89308105 ns/op	 268443712 cache-data-B	56083458 B/op	    7375 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkNarInfoZstdConcurrent/low/same-4    	       3	  11349572 ns/op	      3775 cache-data-B	 6801770 B/op	    1360 allocs/op
+BenchmarkNarInfoZstdConcurrent/low/distinct-4         	       3	  30692483 ns/op	     30200 cache-data-B	53398456 B/op	    7476 allocs/op
+BenchmarkNarInfoZstdConcurrent/high/same-4            	       3	  32623248 ns/op	  33555464 cache-data-B	 7220813 B/op	    1396 allocs/op
+BenchmarkNarInfoZstdConcurrent/high/distinct-4        	       3	  88327237 ns/op	 268443712 cache-data-B	55996698 B/op	    7373 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkNarInfoZstdConcurrent/low/same-4    	       3	  11450326 ns/op	      3775 cache-data-B	 6882600 B/op	    1348 allocs/op
+BenchmarkNarInfoZstdConcurrent/low/distinct-4         	       3	  29451258 ns/op	     30200 cache-data-B	53935965 B/op	    7486 allocs/op
+BenchmarkNarInfoZstdConcurrent/high/same-4            	       3	  30945810 ns/op	  33555464 cache-data-B	 7214546 B/op	    1338 allocs/op
+BenchmarkNarInfoZstdConcurrent/high/distinct-4        	       3	  88857742 ns/op	 268443712 cache-data-B	56338976 B/op	    7377 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkNarInfoZstdConcurrent/low/same-4    	       3	  10649669 ns/op	      3775 cache-data-B	 6890213 B/op	    1366 allocs/op
+BenchmarkNarInfoZstdConcurrent/low/distinct-4         	       3	  29129425 ns/op	     30200 cache-data-B	53569082 B/op	    7474 allocs/op
+BenchmarkNarInfoZstdConcurrent/high/same-4            	       3	  31877678 ns/op	  33555464 cache-data-B	 7130776 B/op	    1347 allocs/op
+BenchmarkNarInfoZstdConcurrent/high/distinct-4        	       3	  89343752 ns/op	 268443712 cache-data-B	56090325 B/op	    7377 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkNarInfoZstdConcurrent/low/same-4    	       3	  11799906 ns/op	      3775 cache-data-B	 6884002 B/op	    1359 allocs/op
+BenchmarkNarInfoZstdConcurrent/low/distinct-4         	       3	  30101644 ns/op	     30200 cache-data-B	53295314 B/op	    7467 allocs/op
+BenchmarkNarInfoZstdConcurrent/high/same-4            	       3	  32356672 ns/op	  33555464 cache-data-B	 7130186 B/op	    1345 allocs/op
+BenchmarkNarInfoZstdConcurrent/high/distinct-4        	       3	  89572983 ns/op	 268443712 cache-data-B	56002488 B/op	    7375 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkNarInfoZstdConcurrent/low/same-4    	       3	  12406752 ns/op	      3775 cache-data-B	 6797581 B/op	    1356 allocs/op
+BenchmarkNarInfoZstdConcurrent/low/distinct-4         	       3	  30554269 ns/op	     30200 cache-data-B	53303888 B/op	    7472 allocs/op
+BenchmarkNarInfoZstdConcurrent/high/same-4            	       3	  32078395 ns/op	  33555464 cache-data-B	 7128053 B/op	    1348 allocs/op
+BenchmarkNarInfoZstdConcurrent/high/distinct-4        	       3	  88093622 ns/op	 268443712 cache-data-B	56087088 B/op	    7374 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkNarInfoZstdConcurrent/low/same-4    	       3	  11294291 ns/op	      3775 cache-data-B	 6887274 B/op	    1361 allocs/op
+BenchmarkNarInfoZstdConcurrent/low/distinct-4         	       3	  28964780 ns/op	     30200 cache-data-B	53662717 B/op	    7482 allocs/op
+BenchmarkNarInfoZstdConcurrent/high/same-4            	       3	  31483039 ns/op	  33555464 cache-data-B	 7222120 B/op	    1361 allocs/op
+BenchmarkNarInfoZstdConcurrent/high/distinct-4        	       3	  89269841 ns/op	 268443712 cache-data-B	56177613 B/op	    7378 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkNarInfoZstdConcurrent/low/same-4    	       3	  10585929 ns/op	      3775 cache-data-B	 6713997 B/op	    1365 allocs/op
+BenchmarkNarInfoZstdConcurrent/low/distinct-4         	       3	  32902563 ns/op	     30200 cache-data-B	53936184 B/op	    7484 allocs/op
+BenchmarkNarInfoZstdConcurrent/high/same-4            	       3	  31413163 ns/op	  33555464 cache-data-B	 7218970 B/op	    1355 allocs/op
+BenchmarkNarInfoZstdConcurrent/high/distinct-4        	       3	  87045073 ns/op	 268443712 cache-data-B	55900058 B/op	    7369 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkNarInfoZstdConcurrent/low/same-4    	       3	  10639879 ns/op	      3775 cache-data-B	 6882120 B/op	    1352 allocs/op
+BenchmarkNarInfoZstdConcurrent/low/distinct-4         	       3	  30634795 ns/op	     30200 cache-data-B	53659850 B/op	    7481 allocs/op
+BenchmarkNarInfoZstdConcurrent/high/same-4            	       3	  32042140 ns/op	  33555464 cache-data-B	 7135050 B/op	    1362 allocs/op
+BenchmarkNarInfoZstdConcurrent/high/distinct-4        	       3	  89396062 ns/op	 268443712 cache-data-B	56176341 B/op	    7381 allocs/op
+PASS

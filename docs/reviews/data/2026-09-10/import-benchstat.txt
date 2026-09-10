@@ -1,0 +1,74 @@
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/niximport
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+                            │ /tmp/tsnixcache-import-baseline.bench │  /tmp/tsnixcache-import-final.bench  │
+                            │                sec/op                 │    sec/op     vs base                │
+Import/low/none-4                                      62.79m ± 15%   82.63m ± 23%  +31.60% (p=0.000 n=10)
+Import/low/zstd-go-4                                   64.43m ± 16%   87.86m ± 17%  +36.37% (p=0.000 n=10)
+Import/low/zstd-external-4                             62.33m ± 36%   87.46m ± 11%  +40.32% (p=0.002 n=10)
+Import/low/xz-4                                        69.18m ± 24%   87.81m ±  5%  +26.93% (p=0.004 n=10)
+Import/low/bzip2-4                                     123.3m ± 27%   153.1m ±  5%  +24.10% (p=0.009 n=10)
+Import/high/none-4                                     61.92m ± 30%   81.74m ±  5%  +32.00% (p=0.007 n=10)
+Import/high/zstd-go-4                                  63.53m ± 19%   83.20m ±  7%  +30.96% (p=0.000 n=10)
+Import/high/zstd-external-4                            66.92m ± 19%   89.63m ± 10%  +33.93% (p=0.000 n=10)
+Import/high/xz-4                                       67.77m ± 26%   93.89m ± 10%  +38.53% (p=0.004 n=10)
+Import/high/bzip2-4                                    745.6m ±  4%   765.4m ± 11%        ~ (p=0.052 n=10)
+geomean                                                88.24m         114.1m        +29.30%
+
+                            │ /tmp/tsnixcache-import-baseline.bench │  /tmp/tsnixcache-import-final.bench   │
+                            │                  B/s                  │      B/s       vs base                │
+Import/low/none-4                                     63.74Mi ± 18%   48.43Mi ± 18%  -24.01% (p=0.000 n=10)
+Import/low/zstd-go-4                                  62.14Mi ± 17%   45.53Mi ± 15%  -26.72% (p=0.000 n=10)
+Import/low/zstd-external-4                            64.18Mi ± 26%   45.75Mi ± 12%  -28.72% (p=0.002 n=10)
+Import/low/xz-4                                       57.89Mi ± 19%   45.56Mi ±  5%  -21.30% (p=0.004 n=10)
+Import/low/bzip2-4                                    32.43Mi ± 21%   26.14Mi ±  6%  -19.39% (p=0.009 n=10)
+Import/high/none-4                                    64.70Mi ± 23%   48.95Mi ±  6%  -24.34% (p=0.007 n=10)
+Import/high/zstd-go-4                                 63.03Mi ± 16%   48.08Mi ±  7%  -23.72% (p=0.000 n=10)
+Import/high/zstd-external-4                           59.78Mi ± 16%   44.65Mi ± 11%  -25.31% (p=0.000 n=10)
+Import/high/xz-4                                      59.03Mi ± 21%   42.61Mi ± 11%  -27.81% (p=0.004 n=10)
+Import/high/bzip2-4                                   5.364Mi ±  3%   5.226Mi ± 10%   -2.58% (p=0.050 n=10)
+geomean                                               45.36Mi         35.07Mi        -22.68%
+
+                            │ /tmp/tsnixcache-import-baseline.bench │  /tmp/tsnixcache-import-final.bench   │
+                            │             compressed-B              │ compressed-B  vs base                 │
+Import/low/none-4                                      4.000Mi ± 0%   4.000Mi ± 0%       ~ (p=1.000 n=10) ¹
+Import/low/zstd-go-4                                     638.0 ± 0%     638.0 ± 0%       ~ (p=1.000 n=10) ¹
+Import/low/zstd-external-4                               638.0 ± 0%     638.0 ± 0%       ~ (p=1.000 n=10) ¹
+Import/low/xz-4                                          888.0 ± 0%     888.0 ± 0%       ~ (p=1.000 n=10) ¹
+Import/low/bzip2-4                                       976.0 ± 0%     976.0 ± 0%       ~ (p=1.000 n=10) ¹
+Import/high/none-4                                     4.000Mi ± 0%   4.000Mi ± 0%       ~ (p=1.000 n=10) ¹
+Import/high/zstd-go-4                                  4.000Mi ± 0%   4.000Mi ± 0%       ~ (p=1.000 n=10) ¹
+Import/high/zstd-external-4                            4.000Mi ± 0%   4.000Mi ± 0%       ~ (p=1.000 n=10) ¹
+Import/high/xz-4                                       4.001Mi ± 0%   4.001Mi ± 0%       ~ (p=1.000 n=10) ¹
+Import/high/bzip2-4                                    4.018Mi ± 0%   4.018Mi ± 0%       ~ (p=1.000 n=10) ¹
+geomean                                                131.3Ki        131.3Ki       +0.00%
+¹ all samples are equal
+
+                            │ /tmp/tsnixcache-import-baseline.bench │  /tmp/tsnixcache-import-final.bench   │
+                            │                 B/op                  │     B/op       vs base                │
+Import/low/none-4                                     404.0Ki ±  0%   407.7Ki ±  0%   +0.91% (p=0.001 n=10)
+Import/low/zstd-go-4                                  6.681Mi ±  0%   6.684Mi ±  0%   +0.04% (p=0.000 n=10)
+Import/low/zstd-external-4                            588.5Ki ± 43%   657.6Ki ± 39%  +11.74% (p=0.009 n=10)
+Import/low/xz-4                                       586.3Ki ±  0%   655.6Ki ±  0%  +11.82% (p=0.000 n=10)
+Import/low/bzip2-4                                    7.306Mi ±  3%   7.309Mi ±  3%   +0.04% (p=0.049 n=10)
+Import/high/none-4                                    403.8Ki ± 63%   407.0Ki ±  0%   +0.80% (p=0.000 n=10)
+Import/high/zstd-go-4                                 6.930Mi ±  0%   6.933Mi ±  0%   +0.04% (p=0.000 n=10)
+Import/high/zstd-external-4                           587.2Ki ±  1%   660.2Ki ±  1%  +12.44% (p=0.000 n=10)
+Import/high/xz-4                                      584.6Ki ±  0%   654.3Ki ±  0%  +11.93% (p=0.000 n=10)
+Import/high/bzip2-4                                   7.783Mi ±  0%   7.785Mi ±  0%   +0.04% (p=0.000 n=10)
+geomean                                               1.460Mi         1.531Mi         +4.83%
+
+                            │ /tmp/tsnixcache-import-baseline.bench │ /tmp/tsnixcache-import-final.bench │
+                            │               allocs/op               │ allocs/op   vs base                │
+Import/low/none-4                                        170.0 ± 1%   226.5 ± 1%  +33.24% (p=0.000 n=10)
+Import/low/zstd-go-4                                     205.0 ± 0%   259.0 ± 2%  +26.34% (p=0.000 n=10)
+Import/low/zstd-external-4                               644.0 ± 1%   727.5 ± 2%  +12.97% (p=0.000 n=10)
+Import/low/xz-4                                          628.0 ± 1%   708.0 ± 1%  +12.74% (p=0.000 n=10)
+Import/low/bzip2-4                                       287.0 ± 0%   340.0 ± 1%  +18.47% (p=0.000 n=10)
+Import/high/none-4                                       169.5 ± 1%   223.5 ± 2%  +31.86% (p=0.000 n=10)
+Import/high/zstd-go-4                                    194.0 ± 1%   246.5 ± 1%  +27.06% (p=0.000 n=10)
+Import/high/zstd-external-4                              636.5 ± 1%   722.0 ± 4%  +13.43% (p=0.000 n=10)
+Import/high/xz-4                                         617.5 ± 1%   705.0 ± 2%  +14.17% (p=0.000 n=10)
+Import/high/bzip2-4                                      399.0 ± 1%   452.5 ± 1%  +13.41% (p=0.000 n=10)
+geomean                                                  340.4        408.8       +20.11%

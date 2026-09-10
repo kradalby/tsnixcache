@@ -1,0 +1,80 @@
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkZstdEvictionParallelLookups/500-4         	       1	   2995842 ns/op	   2540169 lookup-max-ns/op	  204040 B/op	    1788 allocs/op
+BenchmarkZstdEvictionParallelLookups/2000-4        	       1	  24722011 ns/op	  24502178 lookup-max-ns/op	  300064 B/op	    4026 allocs/op
+BenchmarkZstdEvictionParallelLookups/8000-4        	       1	 322241944 ns/op	 321783338 lookup-max-ns/op	  707952 B/op	   13025 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkZstdEvictionParallelLookups/500-4         	       1	   3138215 ns/op	   2515200 lookup-max-ns/op	  198464 B/op	    1781 allocs/op
+BenchmarkZstdEvictionParallelLookups/2000-4        	       1	  28336187 ns/op	  28126987 lookup-max-ns/op	  300016 B/op	    4027 allocs/op
+BenchmarkZstdEvictionParallelLookups/8000-4        	       1	 323536869 ns/op	 322953309 lookup-max-ns/op	  706368 B/op	   13025 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkZstdEvictionParallelLookups/500-4         	       1	   3366055 ns/op	   2558039 lookup-max-ns/op	  198352 B/op	    1780 allocs/op
+BenchmarkZstdEvictionParallelLookups/2000-4        	       1	  24427790 ns/op	  23933147 lookup-max-ns/op	  300064 B/op	    4026 allocs/op
+BenchmarkZstdEvictionParallelLookups/8000-4        	       1	 338881289 ns/op	 338557149 lookup-max-ns/op	  708416 B/op	   13029 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkZstdEvictionParallelLookups/500-4         	       1	   3293690 ns/op	   2420952 lookup-max-ns/op	  198240 B/op	    1779 allocs/op
+BenchmarkZstdEvictionParallelLookups/2000-4        	       1	  24000699 ns/op	  23518509 lookup-max-ns/op	  300064 B/op	    4026 allocs/op
+BenchmarkZstdEvictionParallelLookups/8000-4        	       1	 325384790 ns/op	 325175475 lookup-max-ns/op	  708176 B/op	   13027 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkZstdEvictionParallelLookups/500-4         	       1	   3525401 ns/op	   2517930 lookup-max-ns/op	  198240 B/op	    1779 allocs/op
+BenchmarkZstdEvictionParallelLookups/2000-4        	       1	  24332656 ns/op	  23696190 lookup-max-ns/op	  300128 B/op	    4028 allocs/op
+BenchmarkZstdEvictionParallelLookups/8000-4        	       1	 338358701 ns/op	 337858132 lookup-max-ns/op	  707856 B/op	   13024 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkZstdEvictionParallelLookups/500-4         	       1	   2932009 ns/op	   2452338 lookup-max-ns/op	  198464 B/op	    1781 allocs/op
+BenchmarkZstdEvictionParallelLookups/2000-4        	       1	  23382588 ns/op	  22814400 lookup-max-ns/op	  300288 B/op	    4028 allocs/op
+BenchmarkZstdEvictionParallelLookups/8000-4        	       1	 319081674 ns/op	 318613568 lookup-max-ns/op	  707904 B/op	   13026 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkZstdEvictionParallelLookups/500-4         	       1	   3147724 ns/op	   2849713 lookup-max-ns/op	  198128 B/op	    1778 allocs/op
+BenchmarkZstdEvictionParallelLookups/2000-4        	       1	  24172288 ns/op	  23512788 lookup-max-ns/op	  300576 B/op	    4032 allocs/op
+BenchmarkZstdEvictionParallelLookups/8000-4        	       1	 320897779 ns/op	 320565857 lookup-max-ns/op	  708064 B/op	   13026 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkZstdEvictionParallelLookups/500-4         	       1	   3050453 ns/op	   2372095 lookup-max-ns/op	  197024 B/op	    1781 allocs/op
+BenchmarkZstdEvictionParallelLookups/2000-4        	       1	  25140797 ns/op	  24643998 lookup-max-ns/op	  300288 B/op	    4028 allocs/op
+BenchmarkZstdEvictionParallelLookups/8000-4        	       1	 319922457 ns/op	 319632232 lookup-max-ns/op	  707840 B/op	   13024 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkZstdEvictionParallelLookups/500-4         	       1	   4870909 ns/op	   4075899 lookup-max-ns/op	  198464 B/op	    1781 allocs/op
+BenchmarkZstdEvictionParallelLookups/2000-4        	       1	  23814328 ns/op	  23358442 lookup-max-ns/op	  300288 B/op	    4028 allocs/op
+BenchmarkZstdEvictionParallelLookups/8000-4        	       1	 323660276 ns/op	 323275880 lookup-max-ns/op	  708176 B/op	   13027 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkZstdEvictionParallelLookups/500-4         	       1	   3092441 ns/op	   2551511 lookup-max-ns/op	  198464 B/op	    1781 allocs/op
+BenchmarkZstdEvictionParallelLookups/2000-4        	       1	  23610118 ns/op	  23291460 lookup-max-ns/op	  300288 B/op	    4028 allocs/op
+BenchmarkZstdEvictionParallelLookups/8000-4        	       1	 326602951 ns/op	 326003212 lookup-max-ns/op	  708288 B/op	   13028 allocs/op
+PASS

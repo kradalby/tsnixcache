@@ -1,0 +1,22 @@
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/niximport
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+                           │ /tmp/tsnixcache-roots-baseline.bench │  /tmp/tsnixcache-roots-final.bench  │
+                           │                sec/op                │    sec/op     vs base               │
+GCRootDurability/create-4                             6.064m ± 9%   5.957m ±  6%       ~ (p=0.529 n=10)
+GCRootDurability/refresh-4                            5.992m ± 3%   5.955m ± 11%       ~ (p=0.971 n=10)
+geomean                                               6.028m        5.956m        -1.19%
+
+                           │ /tmp/tsnixcache-roots-baseline.bench │  /tmp/tsnixcache-roots-final.bench  │
+                           │                 B/op                 │     B/op      vs base               │
+GCRootDurability/create-4                            2.062Ki ± 3%   2.054Ki ± 2%       ~ (p=0.714 n=10)
+GCRootDurability/refresh-4                           1.906Ki ± 3%   1.961Ki ± 3%       ~ (p=0.836 n=10)
+geomean                                              1.983Ki        2.007Ki       +1.21%
+
+                           │ /tmp/tsnixcache-roots-baseline.bench │  /tmp/tsnixcache-roots-final.bench  │
+                           │              allocs/op               │ allocs/op   vs base                 │
+GCRootDurability/create-4                              19.00 ± 0%   19.00 ± 0%       ~ (p=1.000 n=10) ¹
+GCRootDurability/refresh-4                             17.00 ± 0%   17.00 ± 0%       ~ (p=1.000 n=10) ¹
+geomean                                                17.97        17.97       +0.00%
+¹ all samples are equal

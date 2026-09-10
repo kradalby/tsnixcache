@@ -1,0 +1,24 @@
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+                     │ /tmp/tsnixcache-eviction-before-clean.txt │  /tmp/tsnixcache-eviction-after.txt  │
+                     │                  sec/op                   │    sec/op     vs base                │
+ZstdEviction/500-16                                2584.3µ ± 19%   561.0µ ± 38%  -78.29% (p=0.000 n=10)
+ZstdEviction/2000-16                               23.835m ±  1%   2.214m ± 69%  -90.71% (p=0.000 n=10)
+ZstdEviction/8000-16                              325.421m ±  2%   9.584m ± 50%  -97.05% (p=0.000 n=10)
+geomean                                             27.16m         2.283m        -91.59%
+
+                     │ /tmp/tsnixcache-eviction-before-clean.txt │  /tmp/tsnixcache-eviction-after.txt  │
+                     │                   B/op                    │     B/op      vs base                │
+ZstdEviction/500-16                                 29.18Ki ± 6%   17.97Ki ± 0%  -38.42% (p=0.000 n=10)
+ZstdEviction/2000-16                               107.39Ki ± 1%   77.97Ki ± 2%  -27.40% (p=0.000 n=10)
+ZstdEviction/8000-16                                419.4Ki ± 0%   312.3Ki ± 0%  -25.53% (p=0.000 n=10)
+geomean                                             109.5Ki        75.92Ki       -30.69%
+
+                     │ /tmp/tsnixcache-eviction-before-clean.txt │ /tmp/tsnixcache-eviction-after.txt  │
+                     │                 allocs/op                 │  allocs/op   vs base                │
+ZstdEviction/500-16                                   763.0 ± 1%    250.0 ± 0%  -67.23% (p=0.000 n=10)
+ZstdEviction/2000-16                                 3.013k ± 0%   1.000k ± 0%  -66.81% (p=0.000 n=10)
+ZstdEviction/8000-16                                12.034k ± 0%   4.000k ± 0%  -66.76% (p=0.000 n=10)
+geomean                                              3.024k        1.000k       -66.94%

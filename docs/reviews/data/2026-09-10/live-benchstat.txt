@@ -1,0 +1,24 @@
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/watch
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+                  │ /tmp/tsnixcache-live-before.txt │   /tmp/tsnixcache-live-after.txt    │
+                  │             sec/op              │   sec/op     vs base                │
+LivePaths/128-16                        506.0µ ± 2%   231.8µ ± 2%  -54.19% (p=0.000 n=10)
+LivePaths/512-16                        2.125m ± 3%   1.018m ± 2%  -52.10% (p=0.000 n=10)
+LivePaths/2000-16                       8.690m ± 1%   4.245m ± 2%  -51.15% (p=0.000 n=10)
+geomean                                 2.106m        1.001m       -52.50%
+
+                  │ /tmp/tsnixcache-live-before.txt │    /tmp/tsnixcache-live-after.txt    │
+                  │              B/op               │     B/op      vs base                │
+LivePaths/128-16                      121.79Ki ± 0%   37.96Ki ± 0%  -68.83% (p=0.000 n=10)
+LivePaths/512-16                       485.8Ki ± 0%   152.7Ki ± 0%  -68.56% (p=0.000 n=10)
+LivePaths/2000-16                     1892.1Ki ± 0%   597.8Ki ± 0%  -68.40% (p=0.000 n=10)
+geomean                                482.0Ki        151.3Ki       -68.60%
+
+                  │ /tmp/tsnixcache-live-before.txt │   /tmp/tsnixcache-live-after.txt    │
+                  │            allocs/op            │  allocs/op   vs base                │
+LivePaths/128-16                        3208.0 ± 0%    556.0 ± 0%  -82.67% (p=0.000 n=10)
+LivePaths/512-16                       12.808k ± 0%   2.136k ± 0%  -83.32% (p=0.000 n=10)
+LivePaths/2000-16                      50.009k ± 0%   8.346k ± 0%  -83.31% (p=0.000 n=10)
+geomean                                 12.71k        2.148k       -83.10%

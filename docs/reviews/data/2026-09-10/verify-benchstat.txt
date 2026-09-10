@@ -1,0 +1,74 @@
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/niximport
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+                            │ /tmp/tsnixcache-verify-baseline.bench │  /tmp/tsnixcache-verify-final.bench  │
+                            │                sec/op                 │    sec/op     vs base                │
+Verify/low/none-4                                      2.460m ± 19%   2.496m ±  5%        ~ (p=0.143 n=10)
+Verify/low/zstd-go-4                                   3.495m ±  4%   3.634m ±  8%   +3.98% (p=0.023 n=10)
+Verify/low/zstd-external-4                             5.180m ±  8%   5.113m ±  8%        ~ (p=0.739 n=10)
+Verify/low/xz-4                                        7.895m ± 15%   8.486m ± 22%        ~ (p=0.739 n=10)
+Verify/low/bzip2-4                                     37.13m ± 18%   37.36m ±  4%        ~ (p=0.631 n=10)
+Verify/high/none-4                                     2.519m ±  9%   2.544m ±  5%        ~ (p=0.436 n=10)
+Verify/high/zstd-go-4                                  4.185m ±  4%   4.252m ± 11%        ~ (p=0.218 n=10)
+Verify/high/zstd-external-4                            5.236m ±  7%   5.844m ±  8%  +11.62% (p=0.001 n=10)
+Verify/high/xz-4                                       7.211m ± 27%   7.729m ± 17%        ~ (p=0.739 n=10)
+Verify/high/bzip2-4                                    347.4m ±  4%   344.2m ±  7%        ~ (p=0.684 n=10)
+geomean                                                8.426m         8.696m         +3.20%
+
+                            │ /tmp/tsnixcache-verify-baseline.bench │  /tmp/tsnixcache-verify-final.bench   │
+                            │                  B/s                  │      B/s       vs base                │
+Verify/low/none-4                                     1.588Gi ± 24%   1.565Gi ±  5%        ~ (p=0.143 n=10)
+Verify/low/zstd-go-4                                  1.118Gi ±  4%   1.075Gi ±  8%   -3.83% (p=0.023 n=10)
+Verify/low/zstd-external-4                            772.3Mi ±  9%   782.3Mi ±  9%        ~ (p=0.739 n=10)
+Verify/low/xz-4                                       506.8Mi ± 13%   472.4Mi ± 28%        ~ (p=0.739 n=10)
+Verify/low/bzip2-4                                    107.8Mi ± 15%   107.1Mi ±  4%        ~ (p=0.631 n=10)
+Verify/high/none-4                                    1.551Gi ±  8%   1.535Gi ±  5%        ~ (p=0.436 n=10)
+Verify/high/zstd-go-4                                 956.0Mi ±  4%   940.7Mi ± 10%        ~ (p=0.218 n=10)
+Verify/high/zstd-external-4                           764.1Mi ±  7%   684.5Mi ±  8%  -10.42% (p=0.001 n=10)
+Verify/high/xz-4                                      555.0Mi ± 22%   517.6Mi ± 15%        ~ (p=0.739 n=10)
+Verify/high/bzip2-4                                   11.52Mi ±  4%   11.62Mi ±  6%        ~ (p=0.697 n=10)
+geomean                                               474.8Mi         460.1Mi         -3.09%
+
+                            │ /tmp/tsnixcache-verify-baseline.bench │  /tmp/tsnixcache-verify-final.bench   │
+                            │             compressed-B              │ compressed-B  vs base                 │
+Verify/low/none-4                                      4.000Mi ± 0%   4.000Mi ± 0%       ~ (p=1.000 n=10) ¹
+Verify/low/zstd-go-4                                     638.0 ± 0%     638.0 ± 0%       ~ (p=1.000 n=10) ¹
+Verify/low/zstd-external-4                               638.0 ± 0%     638.0 ± 0%       ~ (p=1.000 n=10) ¹
+Verify/low/xz-4                                          888.0 ± 0%     888.0 ± 0%       ~ (p=1.000 n=10) ¹
+Verify/low/bzip2-4                                       976.0 ± 0%     976.0 ± 0%       ~ (p=1.000 n=10) ¹
+Verify/high/none-4                                     4.000Mi ± 0%   4.000Mi ± 0%       ~ (p=1.000 n=10) ¹
+Verify/high/zstd-go-4                                  4.000Mi ± 0%   4.000Mi ± 0%       ~ (p=1.000 n=10) ¹
+Verify/high/zstd-external-4                            4.000Mi ± 0%   4.000Mi ± 0%       ~ (p=1.000 n=10) ¹
+Verify/high/xz-4                                       4.001Mi ± 0%   4.001Mi ± 0%       ~ (p=1.000 n=10) ¹
+Verify/high/bzip2-4                                    4.018Mi ± 0%   4.018Mi ± 0%       ~ (p=1.000 n=10) ¹
+geomean                                                131.3Ki        131.3Ki       +0.00%
+¹ all samples are equal
+
+                            │ /tmp/tsnixcache-verify-baseline.bench │  /tmp/tsnixcache-verify-final.bench  │
+                            │                 B/op                  │     B/op      vs base                │
+Verify/low/none-4                                      32.59Ki ± 0%   32.65Ki ± 0%   +0.19% (p=0.000 n=10)
+Verify/low/zstd-go-4                                   3.172Mi ± 0%   3.172Mi ± 0%   +0.00% (p=0.000 n=10)
+Verify/low/zstd-external-4                             124.9Ki ± 1%   157.7Ki ± 1%  +26.33% (p=0.000 n=10)
+Verify/low/xz-4                                        123.9Ki ± 1%   156.2Ki ± 1%  +26.03% (p=0.000 n=10)
+Verify/low/bzip2-4                                     3.488Mi ± 0%   3.488Mi ± 0%   +0.00% (p=0.000 n=10)
+Verify/high/none-4                                     32.59Ki ± 0%   32.65Ki ± 0%   +0.19% (p=0.000 n=10)
+Verify/high/zstd-go-4                                  3.299Mi ± 0%   3.299Mi ± 0%   +0.00% (p=0.000 n=10)
+Verify/high/zstd-external-4                            124.4Ki ± 0%   157.3Ki ± 1%  +26.38% (p=0.000 n=10)
+Verify/high/xz-4                                       123.1Ki ± 0%   156.6Ki ± 1%  +27.22% (p=0.000 n=10)
+Verify/high/bzip2-4                                    3.726Mi ± 0%   3.726Mi ± 0%   +0.00% (p=0.000 n=10)
+geomean                                                361.0Ki        396.8Ki        +9.90%
+
+                            │ /tmp/tsnixcache-verify-baseline.bench │ /tmp/tsnixcache-verify-final.bench  │
+                            │               allocs/op               │  allocs/op   vs base                │
+Verify/low/none-4                                        9.000 ± 0%   11.000 ± 0%  +22.22% (p=0.000 n=10)
+Verify/low/zstd-go-4                                     23.00 ± 0%    25.00 ± 0%   +8.70% (p=0.000 n=10)
+Verify/low/zstd-external-4                               243.0 ± 1%    258.5 ± 1%   +6.38% (p=0.000 n=10)
+Verify/low/xz-4                                          237.0 ± 1%    251.0 ± 1%   +5.91% (p=0.000 n=10)
+Verify/low/bzip2-4                                       68.00 ± 0%    70.00 ± 0%   +2.94% (p=0.000 n=10)
+Verify/high/none-4                                       9.000 ± 0%   11.000 ± 0%  +22.22% (p=0.000 n=10)
+Verify/high/zstd-go-4                                    21.00 ± 0%    23.00 ± 0%   +9.52% (p=0.000 n=10)
+Verify/high/zstd-external-4                              242.0 ± 0%    258.0 ± 1%   +6.61% (p=0.000 n=10)
+Verify/high/xz-4                                         231.5 ± 1%    248.5 ± 1%   +7.34% (p=0.000 n=10)
+Verify/high/bzip2-4                                      123.0 ± 0%    125.0 ± 0%   +1.63% (p=0.000 n=10)
+geomean                                                  63.44         69.24        +9.14%

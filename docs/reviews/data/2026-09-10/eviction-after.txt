@@ -1,0 +1,36 @@
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/cache
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkZstdEviction/500-16         	       1	    896943 ns/op	   16000 B/op	     250 allocs/op
+BenchmarkZstdEviction/500-16         	       1	    552643 ns/op	   18400 B/op	     250 allocs/op
+BenchmarkZstdEviction/500-16         	       1	    562802 ns/op	   18400 B/op	     250 allocs/op
+BenchmarkZstdEviction/500-16         	       1	    556609 ns/op	   18400 B/op	     250 allocs/op
+BenchmarkZstdEviction/500-16         	       1	    571065 ns/op	   18400 B/op	     250 allocs/op
+BenchmarkZstdEviction/500-16         	       1	    559171 ns/op	   18400 B/op	     250 allocs/op
+BenchmarkZstdEviction/500-16         	       1	    773442 ns/op	   18400 B/op	     250 allocs/op
+BenchmarkZstdEviction/500-16         	       1	    543577 ns/op	   18400 B/op	     250 allocs/op
+BenchmarkZstdEviction/500-16         	       1	    552913 ns/op	   18400 B/op	     250 allocs/op
+BenchmarkZstdEviction/500-16         	       1	    664435 ns/op	   18400 B/op	     250 allocs/op
+BenchmarkZstdEviction/2000-16        	       1	   2164215 ns/op	   79840 B/op	    1000 allocs/op
+BenchmarkZstdEviction/2000-16        	       1	   2242014 ns/op	   78400 B/op	    1000 allocs/op
+BenchmarkZstdEviction/2000-16        	       1	   2334941 ns/op	   79840 B/op	    1000 allocs/op
+BenchmarkZstdEviction/2000-16        	       1	   2186648 ns/op	   79840 B/op	    1000 allocs/op
+BenchmarkZstdEviction/2000-16        	       1	   3778325 ns/op	   79840 B/op	    1000 allocs/op
+BenchmarkZstdEviction/2000-16        	       1	   2165338 ns/op	   78400 B/op	    1000 allocs/op
+BenchmarkZstdEviction/2000-16        	       1	   3750484 ns/op	   79840 B/op	    1000 allocs/op
+BenchmarkZstdEviction/2000-16        	       1	   2182643 ns/op	   79840 B/op	    1000 allocs/op
+BenchmarkZstdEviction/2000-16        	       1	   2264581 ns/op	   78400 B/op	    1000 allocs/op
+BenchmarkZstdEviction/2000-16        	       1	   2103775 ns/op	   79840 B/op	    1000 allocs/op
+BenchmarkZstdEviction/8000-16        	       1	   9850041 ns/op	  319840 B/op	    4000 allocs/op
+BenchmarkZstdEviction/8000-16        	       1	  19522180 ns/op	  319840 B/op	    4000 allocs/op
+BenchmarkZstdEviction/8000-16        	       1	  12277128 ns/op	  319840 B/op	    4000 allocs/op
+BenchmarkZstdEviction/8000-16        	       1	  14402025 ns/op	  318400 B/op	    4000 allocs/op
+BenchmarkZstdEviction/8000-16        	       1	  13671294 ns/op	  319840 B/op	    4000 allocs/op
+BenchmarkZstdEviction/8000-16        	       1	   9317424 ns/op	  319840 B/op	    4000 allocs/op
+BenchmarkZstdEviction/8000-16        	       1	   9041885 ns/op	  319840 B/op	    4000 allocs/op
+BenchmarkZstdEviction/8000-16        	       1	   9008899 ns/op	  319840 B/op	    4000 allocs/op
+BenchmarkZstdEviction/8000-16        	       1	   8637526 ns/op	  319840 B/op	    4000 allocs/op
+BenchmarkZstdEviction/8000-16        	       1	   8738710 ns/op	  319840 B/op	    4000 allocs/op
+PASS
+ok  	github.com/kradalby/tsnixcache/cache	1.192s

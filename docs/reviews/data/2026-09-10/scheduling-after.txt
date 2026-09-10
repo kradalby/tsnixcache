@@ -1,0 +1,26 @@
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/upload
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkDependencyScheduling/2jobs-16         	       1	 251331713 ns/op	 152787519 chain-ns/op	  120776 B/op	     735 allocs/op
+BenchmarkDependencyScheduling/2jobs-16         	       1	 250644466 ns/op	 152258154 chain-ns/op	   95928 B/op	     685 allocs/op
+BenchmarkDependencyScheduling/2jobs-16         	       1	 251300655 ns/op	 152728229 chain-ns/op	   99304 B/op	     695 allocs/op
+BenchmarkDependencyScheduling/2jobs-16         	       1	 250779397 ns/op	 152341031 chain-ns/op	   97264 B/op	     690 allocs/op
+BenchmarkDependencyScheduling/2jobs-16         	       1	 251043254 ns/op	 152578496 chain-ns/op	   84152 B/op	     655 allocs/op
+BenchmarkDependencyScheduling/2jobs-16         	       1	 250846713 ns/op	 152365392 chain-ns/op	   97872 B/op	     684 allocs/op
+BenchmarkDependencyScheduling/2jobs-16         	       1	 251256395 ns/op	 152669510 chain-ns/op	   98280 B/op	     679 allocs/op
+BenchmarkDependencyScheduling/2jobs-16         	       1	 251553562 ns/op	 152960637 chain-ns/op	   85424 B/op	     671 allocs/op
+BenchmarkDependencyScheduling/2jobs-16         	       1	 251047913 ns/op	 152591619 chain-ns/op	   96880 B/op	     672 allocs/op
+BenchmarkDependencyScheduling/2jobs-16         	       1	 250926370 ns/op	 152421489 chain-ns/op	   99160 B/op	     669 allocs/op
+BenchmarkDependencyScheduling/8jobs-16         	       1	 261927371 ns/op	 197573813 chain-ns/op	  506368 B/op	    3973 allocs/op
+BenchmarkDependencyScheduling/8jobs-16         	       1	 261573533 ns/op	 197050499 chain-ns/op	  445648 B/op	    3942 allocs/op
+BenchmarkDependencyScheduling/8jobs-16         	       1	 261994474 ns/op	 202551254 chain-ns/op	  430200 B/op	    3893 allocs/op
+BenchmarkDependencyScheduling/8jobs-16         	       1	 261451184 ns/op	 198007938 chain-ns/op	  444480 B/op	    3935 allocs/op
+BenchmarkDependencyScheduling/8jobs-16         	       1	 261980656 ns/op	 197539553 chain-ns/op	  454272 B/op	    3917 allocs/op
+BenchmarkDependencyScheduling/8jobs-16         	       1	 261923576 ns/op	 197349864 chain-ns/op	  440160 B/op	    3875 allocs/op
+BenchmarkDependencyScheduling/8jobs-16         	       1	 261818720 ns/op	 199238737 chain-ns/op	  439528 B/op	    3870 allocs/op
+BenchmarkDependencyScheduling/8jobs-16         	       1	 261745612 ns/op	 199174266 chain-ns/op	  457928 B/op	    3918 allocs/op
+BenchmarkDependencyScheduling/8jobs-16         	       1	 261283752 ns/op	 201850290 chain-ns/op	  435464 B/op	    3902 allocs/op
+BenchmarkDependencyScheduling/8jobs-16         	       1	 261788758 ns/op	 198256651 chain-ns/op	  453432 B/op	    3897 allocs/op
+PASS
+ok  	github.com/kradalby/tsnixcache/upload	5.147s

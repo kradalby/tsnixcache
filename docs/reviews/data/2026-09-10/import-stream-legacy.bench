@@ -1,0 +1,150 @@
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/niximport
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkImport/low/none-4    	       1	 151462597 ns/op	  27.69 MB/s	   4194584 compressed-B	  417352 B/op	     224 allocs/op
+BenchmarkImport/low/zstd-go-4 	       1	  87882988 ns/op	  47.73 MB/s	       638.0 compressed-B	 7009296 B/op	     259 allocs/op
+BenchmarkImport/low/zstd-external-4         	       1	  84097270 ns/op	  49.88 MB/s	       638.0 compressed-B	  676176 B/op	     746 allocs/op
+BenchmarkImport/low/xz-4                    	       1	  88640066 ns/op	  47.32 MB/s	       888.0 compressed-B	  669176 B/op	     698 allocs/op
+BenchmarkImport/low/bzip2-4                 	       1	 165151513 ns/op	  25.40 MB/s	       976.0 compressed-B	 7664440 B/op	     341 allocs/op
+BenchmarkImport/high/none-4                 	       1	  84326282 ns/op	  49.74 MB/s	   4194584 compressed-B	  416920 B/op	     223 allocs/op
+BenchmarkImport/high/zstd-go-4              	       1	  95023223 ns/op	  44.14 MB/s	   4194664 compressed-B	 7269736 B/op	     247 allocs/op
+BenchmarkImport/high/zstd-external-4        	       1	  97704825 ns/op	  42.93 MB/s	   4194664 compressed-B	  673672 B/op	     721 allocs/op
+BenchmarkImport/high/xz-4                   	       1	  89065840 ns/op	  47.10 MB/s	   4194840 compressed-B	  670424 B/op	     701 allocs/op
+BenchmarkImport/high/bzip2-4                	       1	 913293428 ns/op	   4.59 MB/s	   4213442 compressed-B	 8164392 B/op	     452 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/niximport
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkImport/low/none-4    	       1	  83345717 ns/op	  50.33 MB/s	   4194584 compressed-B	  418072 B/op	     228 allocs/op
+BenchmarkImport/low/zstd-go-4 	       1	  79929747 ns/op	  52.48 MB/s	       638.0 compressed-B	 7009072 B/op	     258 allocs/op
+BenchmarkImport/low/zstd-external-4         	       1	  88161425 ns/op	  47.58 MB/s	       638.0 compressed-B	  672312 B/op	     724 allocs/op
+BenchmarkImport/low/xz-4                    	       1	  91803582 ns/op	  45.69 MB/s	       888.0 compressed-B	  671560 B/op	     721 allocs/op
+BenchmarkImport/low/bzip2-4                 	       1	 143250103 ns/op	  29.28 MB/s	       976.0 compressed-B	 7664776 B/op	     340 allocs/op
+BenchmarkImport/high/none-4                 	       1	  75377229 ns/op	  55.65 MB/s	   4194584 compressed-B	  417896 B/op	     225 allocs/op
+BenchmarkImport/high/zstd-go-4              	       1	  99344669 ns/op	  42.22 MB/s	   4194664 compressed-B	 7269736 B/op	     247 allocs/op
+BenchmarkImport/high/zstd-external-4        	       1	  87435785 ns/op	  47.97 MB/s	   4194664 compressed-B	  679648 B/op	     734 allocs/op
+BenchmarkImport/high/xz-4                   	       1	  88279440 ns/op	  47.51 MB/s	   4194840 compressed-B	  670200 B/op	     700 allocs/op
+BenchmarkImport/high/bzip2-4                	       1	 751073223 ns/op	   5.58 MB/s	   4213442 compressed-B	 8164856 B/op	     455 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/niximport
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkImport/low/none-4    	       1	  94199068 ns/op	  44.53 MB/s	   4194584 compressed-B	  418344 B/op	     228 allocs/op
+BenchmarkImport/low/zstd-go-4 	       1	  94402716 ns/op	  44.43 MB/s	       638.0 compressed-B	 7009200 B/op	     257 allocs/op
+BenchmarkImport/low/zstd-external-4         	       1	  81444461 ns/op	  51.50 MB/s	       638.0 compressed-B	  673552 B/op	     725 allocs/op
+BenchmarkImport/low/xz-4                    	       1	  93126080 ns/op	  45.04 MB/s	       888.0 compressed-B	  673368 B/op	     715 allocs/op
+BenchmarkImport/low/bzip2-4                 	       1	 149053939 ns/op	  28.14 MB/s	       976.0 compressed-B	 7402072 B/op	     338 allocs/op
+BenchmarkImport/high/none-4                 	       1	  81747054 ns/op	  51.31 MB/s	   4194584 compressed-B	  417416 B/op	     224 allocs/op
+BenchmarkImport/high/zstd-go-4              	       1	  97891157 ns/op	  42.85 MB/s	   4194664 compressed-B	 7269736 B/op	     247 allocs/op
+BenchmarkImport/high/zstd-external-4        	       1	 101912342 ns/op	  41.16 MB/s	   4194664 compressed-B	  671720 B/op	     717 allocs/op
+BenchmarkImport/high/xz-4                   	       1	 101963821 ns/op	  41.14 MB/s	   4194840 compressed-B	  669464 B/op	     700 allocs/op
+BenchmarkImport/high/bzip2-4                	       1	 762904118 ns/op	   5.50 MB/s	   4213442 compressed-B	 8164392 B/op	     454 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/niximport
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkImport/low/none-4    	       1	  99726353 ns/op	  42.06 MB/s	   4194584 compressed-B	  417848 B/op	     225 allocs/op
+BenchmarkImport/low/zstd-go-4 	       1	  96059836 ns/op	  43.67 MB/s	       638.0 compressed-B	 7008544 B/op	     255 allocs/op
+BenchmarkImport/low/zstd-external-4         	       1	  88364148 ns/op	  47.47 MB/s	       638.0 compressed-B	  674808 B/op	     724 allocs/op
+BenchmarkImport/low/xz-4                    	       1	  92622881 ns/op	  45.29 MB/s	       888.0 compressed-B	  671272 B/op	     702 allocs/op
+BenchmarkImport/low/bzip2-4                 	       1	 157419994 ns/op	  26.65 MB/s	       976.0 compressed-B	 7664104 B/op	     338 allocs/op
+BenchmarkImport/high/none-4                 	       1	  85460602 ns/op	  49.08 MB/s	   4194584 compressed-B	  416696 B/op	     221 allocs/op
+BenchmarkImport/high/zstd-go-4              	       1	 102856262 ns/op	  40.78 MB/s	   4194664 compressed-B	 7269080 B/op	     244 allocs/op
+BenchmarkImport/high/zstd-external-4        	       1	  86194727 ns/op	  48.66 MB/s	   4194664 compressed-B	  677264 B/op	     722 allocs/op
+BenchmarkImport/high/xz-4                   	       1	  94743956 ns/op	  44.27 MB/s	   4194840 compressed-B	  672200 B/op	     709 allocs/op
+BenchmarkImport/high/bzip2-4                	       1	 788133158 ns/op	   5.32 MB/s	   4213442 compressed-B	 8163720 B/op	     449 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/niximport
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkImport/low/none-4    	       1	  73789024 ns/op	  56.85 MB/s	   4194584 compressed-B	  417176 B/op	     222 allocs/op
+BenchmarkImport/low/zstd-go-4 	       1	  74130398 ns/op	  56.58 MB/s	       638.0 compressed-B	 7008976 B/op	     258 allocs/op
+BenchmarkImport/low/zstd-external-4         	       1	  81581683 ns/op	  51.42 MB/s	       638.0 compressed-B	  676152 B/op	     732 allocs/op
+BenchmarkImport/low/xz-4                    	       1	  98958679 ns/op	  42.39 MB/s	       888.0 compressed-B	  672584 B/op	     713 allocs/op
+BenchmarkImport/low/bzip2-4                 	       1	 144732659 ns/op	  28.98 MB/s	       976.0 compressed-B	 7664232 B/op	     339 allocs/op
+BenchmarkImport/high/none-4                 	       1	  81797360 ns/op	  51.28 MB/s	   4194584 compressed-B	  417208 B/op	     224 allocs/op
+BenchmarkImport/high/zstd-go-4              	       1	  79494852 ns/op	  52.77 MB/s	   4194664 compressed-B	 7269736 B/op	     247 allocs/op
+BenchmarkImport/high/zstd-external-4        	       1	  85935310 ns/op	  48.81 MB/s	   4194664 compressed-B	  677104 B/op	     720 allocs/op
+BenchmarkImport/high/xz-4                   	       1	  89442471 ns/op	  46.90 MB/s	   4194840 compressed-B	  673760 B/op	     721 allocs/op
+BenchmarkImport/high/bzip2-4                	       1	 765177893 ns/op	   5.48 MB/s	   4213442 compressed-B	 8164152 B/op	     452 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/niximport
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkImport/low/none-4    	       1	  78276333 ns/op	  53.59 MB/s	   4194584 compressed-B	  417384 B/op	     224 allocs/op
+BenchmarkImport/low/zstd-go-4 	       1	  86538439 ns/op	  48.47 MB/s	       638.0 compressed-B	 7008976 B/op	     255 allocs/op
+BenchmarkImport/low/zstd-external-4         	       1	  95634976 ns/op	  43.86 MB/s	       638.0 compressed-B	  674856 B/op	     730 allocs/op
+BenchmarkImport/low/xz-4                    	       1	 100739853 ns/op	  41.64 MB/s	       888.0 compressed-B	  672584 B/op	     713 allocs/op
+BenchmarkImport/low/bzip2-4                 	       1	 157930428 ns/op	  26.56 MB/s	       976.0 compressed-B	 7402104 B/op	     337 allocs/op
+BenchmarkImport/high/none-4                 	       1	  93126892 ns/op	  45.04 MB/s	   4194584 compressed-B	  417832 B/op	     226 allocs/op
+BenchmarkImport/high/zstd-go-4              	       1	 110575894 ns/op	  37.93 MB/s	   4194664 compressed-B	 7269960 B/op	     249 allocs/op
+BenchmarkImport/high/zstd-external-4        	       1	 112457193 ns/op	  37.30 MB/s	   4194664 compressed-B	  675784 B/op	     724 allocs/op
+BenchmarkImport/high/xz-4                   	       1	 111390433 ns/op	  37.66 MB/s	   4194840 compressed-B	  671000 B/op	     703 allocs/op
+BenchmarkImport/high/bzip2-4                	       1	 774998850 ns/op	   5.41 MB/s	   4213442 compressed-B	 8163640 B/op	     449 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/niximport
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkImport/low/none-4    	       1	  89460495 ns/op	  46.89 MB/s	   4194584 compressed-B	  417272 B/op	     223 allocs/op
+BenchmarkImport/low/zstd-go-4 	       1	  83350099 ns/op	  50.32 MB/s	       638.0 compressed-B	 7009200 B/op	     260 allocs/op
+BenchmarkImport/low/zstd-external-4         	       1	  88734310 ns/op	  47.27 MB/s	       638.0 compressed-B	  672488 B/op	     724 allocs/op
+BenchmarkImport/low/xz-4                    	       1	  92122535 ns/op	  45.53 MB/s	       888.0 compressed-B	  669848 B/op	     704 allocs/op
+BenchmarkImport/low/bzip2-4                 	       1	 151547183 ns/op	  27.68 MB/s	       976.0 compressed-B	 7664248 B/op	     339 allocs/op
+BenchmarkImport/high/none-4                 	       1	  94507381 ns/op	  44.38 MB/s	   4194584 compressed-B	  417176 B/op	     223 allocs/op
+BenchmarkImport/high/zstd-go-4              	       1	  92562643 ns/op	  45.32 MB/s	   4194664 compressed-B	 7269864 B/op	     249 allocs/op
+BenchmarkImport/high/zstd-external-4        	       1	  85334098 ns/op	  49.15 MB/s	   4194664 compressed-B	  677376 B/op	     722 allocs/op
+BenchmarkImport/high/xz-4                   	       1	  98600476 ns/op	  42.54 MB/s	   4194840 compressed-B	  674664 B/op	     710 allocs/op
+BenchmarkImport/high/bzip2-4                	       1	 776574176 ns/op	   5.40 MB/s	   4213442 compressed-B	 8163720 B/op	     449 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/niximport
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkImport/low/none-4    	       1	  78920382 ns/op	  53.15 MB/s	   4194584 compressed-B	  418072 B/op	     227 allocs/op
+BenchmarkImport/low/zstd-go-4 	       1	  78292458 ns/op	  53.58 MB/s	       638.0 compressed-B	 7009072 B/op	     258 allocs/op
+BenchmarkImport/low/zstd-external-4         	       1	  81779178 ns/op	  51.29 MB/s	       638.0 compressed-B	  413912 B/op	     733 allocs/op
+BenchmarkImport/low/xz-4                    	       1	 104916768 ns/op	  39.98 MB/s	       888.0 compressed-B	  671528 B/op	     714 allocs/op
+BenchmarkImport/low/bzip2-4                 	       1	 143662452 ns/op	  29.20 MB/s	       976.0 compressed-B	 7664104 B/op	     338 allocs/op
+BenchmarkImport/high/none-4                 	       1	  84155562 ns/op	  49.84 MB/s	   4194584 compressed-B	  417400 B/op	     224 allocs/op
+BenchmarkImport/high/zstd-go-4              	       1	  81055838 ns/op	  51.75 MB/s	   4194664 compressed-B	 7269560 B/op	     245 allocs/op
+BenchmarkImport/high/zstd-external-4        	       1	  85905725 ns/op	  48.83 MB/s	   4194664 compressed-B	  673512 B/op	     718 allocs/op
+BenchmarkImport/high/xz-4                   	       1	  82688380 ns/op	  50.73 MB/s	   4194840 compressed-B	  671160 B/op	     712 allocs/op
+BenchmarkImport/high/bzip2-4                	       1	 753747374 ns/op	   5.56 MB/s	   4213442 compressed-B	 8164408 B/op	     453 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/niximport
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkImport/low/none-4    	       1	  86534590 ns/op	  48.47 MB/s	   4194584 compressed-B	  418056 B/op	     227 allocs/op
+BenchmarkImport/low/zstd-go-4 	       1	  93323589 ns/op	  44.95 MB/s	       638.0 compressed-B	 7008944 B/op	     255 allocs/op
+BenchmarkImport/low/zstd-external-4         	       1	  83815712 ns/op	  50.05 MB/s	       638.0 compressed-B	  672632 B/op	     724 allocs/op
+BenchmarkImport/low/xz-4                    	       1	  96747527 ns/op	  43.36 MB/s	       888.0 compressed-B	  670328 B/op	     706 allocs/op
+BenchmarkImport/low/bzip2-4                 	       1	 167463543 ns/op	  25.05 MB/s	       976.0 compressed-B	 7664776 B/op	     342 allocs/op
+BenchmarkImport/high/none-4                 	       1	  90820619 ns/op	  46.19 MB/s	   4194584 compressed-B	  417352 B/op	     224 allocs/op
+BenchmarkImport/high/zstd-go-4              	       1	  92196072 ns/op	  45.50 MB/s	   4194664 compressed-B	 7269736 B/op	     247 allocs/op
+BenchmarkImport/high/zstd-external-4        	       1	  88443130 ns/op	  47.43 MB/s	   4194664 compressed-B	  678480 B/op	     729 allocs/op
+BenchmarkImport/high/xz-4                   	       1	  87973379 ns/op	  47.68 MB/s	   4194840 compressed-B	  669496 B/op	     698 allocs/op
+BenchmarkImport/high/bzip2-4                	       1	 782672176 ns/op	   5.36 MB/s	   4213442 compressed-B	 8163720 B/op	     449 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/kradalby/tsnixcache/niximport
+cpu: 13th Gen Intel(R) Core(TM) i9-13900K
+BenchmarkImport/low/none-4    	       1	  89125373 ns/op	  47.06 MB/s	   4194584 compressed-B	  417848 B/op	     226 allocs/op
+BenchmarkImport/low/zstd-go-4 	       1	  76005000 ns/op	  55.19 MB/s	       638.0 compressed-B	 7014672 B/op	     260 allocs/op
+BenchmarkImport/low/zstd-external-4         	       1	  83129518 ns/op	  50.46 MB/s	       638.0 compressed-B	  413976 B/op	     725 allocs/op
+BenchmarkImport/low/xz-4                    	       1	  88723520 ns/op	  47.28 MB/s	       888.0 compressed-B	  674760 B/op	     714 allocs/op
+BenchmarkImport/low/bzip2-4                 	       1	 141531615 ns/op	  29.64 MB/s	       976.0 compressed-B	 7664056 B/op	     338 allocs/op
+BenchmarkImport/high/none-4                 	       1	  84671877 ns/op	  49.54 MB/s	   4194584 compressed-B	  417208 B/op	     223 allocs/op
+BenchmarkImport/high/zstd-go-4              	       1	  79414229 ns/op	  52.82 MB/s	   4194664 compressed-B	 7269192 B/op	     245 allocs/op
+BenchmarkImport/high/zstd-external-4        	       1	  94535339 ns/op	  44.37 MB/s	   4194664 compressed-B	  679312 B/op	     730 allocs/op
+BenchmarkImport/high/xz-4                   	       1	 103845794 ns/op	  40.39 MB/s	   4194840 compressed-B	  670728 B/op	     702 allocs/op
+BenchmarkImport/high/bzip2-4                	       1	 760855912 ns/op	   5.51 MB/s	   4213442 compressed-B	 8164184 B/op	     452 allocs/op
+PASS
