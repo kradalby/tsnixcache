@@ -198,7 +198,7 @@ its state directory across restarts so failed uploads can resume.
 | Platform   | Module state                | Poll fallback |
 | ---------- | --------------------------- | ------------: |
 | NixOS      | `/var/lib/tsnixcache-watch` |    30 seconds |
-| nix-darwin | `/var/lib/tsnixcache-watch` |     5 minutes |
+| nix-darwin | `/var/db/tsnixcache-watch`  |     5 minutes |
 
 For a manual run, Linux uses `$XDG_STATE_HOME/tsnixcache` or
 `~/.local/state/tsnixcache`. Darwin uses the user's Application Support
@@ -253,7 +253,7 @@ These options exist in both client modules.
 | `watch.to`              | `"http://tsnixcache"`          | Watcher destination.                             |
 | `watch.db`              | `/nix/var/nix/db/db.sqlite`    | Database to monitor.                             |
 | `watch.storeDir`        | `/nix/store`                   | Store containing discovered paths.               |
-| `watch.stateDir`        | `/var/lib/tsnixcache-watch`    | Persistent retry state.                          |
+| `watch.stateDir`        | Platform default above         | Persistent retry state.                          |
 | `watch.pollInterval`    | Linux: `"30s"`; Darwin: `"5m"` | Polling fallback.                                |
 
 Add additional trusted keys through Nix:
