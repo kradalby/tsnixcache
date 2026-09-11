@@ -315,6 +315,7 @@ func TestStateDirectoryPermissions(t *testing.T) {
 	require.NoError(t, os.Chmod(dir, 0o755)) // #nosec G302 -- exercises refusal of public state directories.
 	_, err := Open(t.Context(), filepath.Join(dir, "watch.sqlite"))
 	require.ErrorIs(t, err, errPrivateDirectory)
+	require.ErrorContains(t, err, dir+" is mode 0755")
 }
 
 func privateDir(tb testing.TB) string {
