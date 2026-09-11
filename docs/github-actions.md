@@ -33,7 +33,7 @@ finish() {
   build_status=$?
   trap - EXIT INT TERM
   set +e
-  args=(--stop --pid-file "$session/watch.pid" --pid-file-timeout 10s --timeout 60s)
+  args=(--stop --pid-file "$session/watch.pid" --pid-file-timeout 10s --timeout 0)
   if [ -n "$token" ]; then args+=(--session "$token"); fi
   "$cache" wait-for "${args[@]}"
   upload_status=$?
@@ -48,7 +48,8 @@ finish() {
 }
 
 "$cache" watch --to "${TSNIXCACHE_URL:-http://tsnixcache}" \
-  --state-dir "$state" --pid-file "$session/watch.pid" >"$session/watch.log" 2>&1 &
+  --state-dir "$state" --pid-file "$session/watch.pid" --drain-timeout 0 \
+  >"$session/watch.log" 2>&1 &
 watcher=$!
 trap finish EXIT
 trap 'exit 130' INT
@@ -63,6 +64,8 @@ nix build .
 - The exit trap requests an authenticated final drain after success or failure.
 - A build failure keeps its exit status.
 - A successful build fails when the final upload fails.
+- The final drain and wait have no CLI deadline; the Actions job timeout remains
+  the outer bound.
 - Session logs and terminal status remain available for diagnosis.
 
 ## State and recovery
@@ -76,8 +79,10 @@ nix build .
 Hosted runners need explicit persistence for retry state between jobs.
 `RUNNER_TEMP` is cleared at job boundaries.
 
-If authenticated stop times out, keep the session directory and retry the stop
-before reusing that state directory.
+`watch --drain-timeout` bounds final uploads, while `wait-for --timeout` bounds
+the whole wait for their result. This recipe sets both to `0`. If the job
+interrupts the authenticated stop, keep the session directory and retry before
+reusing that state directory.
 
 `TSNIXCACHE_URL` sets the destination for the recipe and is also the default URL
 for manual `push` and `watch` commands.

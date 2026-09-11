@@ -402,7 +402,7 @@ func TestDrainDeadline(t *testing.T) {
 
 		return upload.Summary{Failed: names}, ctx.Err()
 	})
-	f.w.SetDrainTimeoutForTesting(50 * time.Millisecond)
+	f.w.DrainTimeout = 50 * time.Millisecond
 	insertPaths(t, f.source, fixturePaths(2101)...)
 	require.ErrorIs(t, f.p.finish(t.Context()), ErrIncomplete)
 	cp, err := f.p.state.Checkpoint(t.Context())
@@ -419,6 +419,23 @@ func TestDrainDeadline(t *testing.T) {
 	cp, err = f.p.state.Checkpoint(t.Context())
 	require.NoError(t, err)
 	require.False(t, cp.Boundary.Valid)
+}
+
+func TestDrainWithoutDeadline(t *testing.T) {
+	f := newRetryFixture(t, func(ctx context.Context, _ string, names []string) (upload.Summary, error) {
+		timer := time.NewTimer(100 * time.Millisecond)
+		defer timer.Stop()
+
+		select {
+		case <-ctx.Done():
+			return upload.Summary{Failed: names}, ctx.Err()
+		case <-timer.C:
+			return upload.Summary{Uploaded: len(names)}, nil
+		}
+	})
+	f.w.DrainTimeout = 0
+	insertPaths(t, f.source, "pending")
+	require.NoError(t, f.p.finish(t.Context()))
 }
 
 func TestBatchFailureRetained(t *testing.T) {

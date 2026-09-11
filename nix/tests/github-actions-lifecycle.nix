@@ -10,7 +10,10 @@ let
   common = import ./push-common.nix { inherit pkgs tsnixcache tsnixcacheModule; };
   blocks = pkgs.lib.splitString "```bash\n" (builtins.readFile ../../docs/github-actions.md);
   block = builtins.head (builtins.filter (pkgs.lib.hasInfix "session=$(mktemp") blocks);
-  recipe = pkgs.writeShellScript "readme-ci" (builtins.head (pkgs.lib.splitString "```" block));
+  recipe =
+    assert pkgs.lib.hasInfix "--drain-timeout 0" block;
+    assert pkgs.lib.hasInfix "--timeout 0" block;
+    pkgs.writeShellScript "readme-ci" (builtins.head (pkgs.lib.splitString "```" block));
   resolvePackage = pkgs.writeShellScriptBin "nix" ''
     if [ "$#" -eq 4 ] && [ "$1" = build ] && [ "$2" = --no-link ] &&
        [ "$3" = --print-out-paths ] && [ "$4" = 'github:kradalby/tsnixcache#default' ]; then
