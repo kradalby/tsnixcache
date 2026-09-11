@@ -44,8 +44,8 @@ supplement deterministic ownership, cancellation, and lifecycle regressions.
 
 ## Formatting and dependencies
 
-Treefmt runs gofumpt, goimports, nixfmt, prettier, and shfmt. Hooks invoke it
-with `--fail-on-change`.
+Treefmt runs gofumpt, goimports, nixfmt, prettier, ruff-format, and shfmt. The
+hooks also run `ruff check` for Python. Formatting hooks use `--fail-on-change`.
 
 When the vendor tree changes, including through imported test packages, update
 its hash:

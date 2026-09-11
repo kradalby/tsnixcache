@@ -1,103 +1,81 @@
-# Security and trust model
+# Security
 
-The core trust rules are simple:
+Cache reads are unauthenticated. A node allowed to push is trusted as a Nix
+builder.
 
-1. Anyone who can reach a cache listener can read cached paths.
-2. Anyone allowed to push is trusted as a builder.
+| Listener       | Reads                      | Writes                    | `/debug/`                                      |
+| -------------- | -------------------------- | ------------------------- | ---------------------------------------------- |
+| tsnet          | Any reachable tailnet node | Nodes with the push grant | Debug gate plus the push grant                 |
+| Plain `listen` | Any reachable client       | Denied by default         | Debug gate; force-GC also needs writes enabled |
 
-| Listener | Reads                      | Writes                    | `/debug/`                                                                  |
-| -------- | -------------------------- | ------------------------- | -------------------------------------------------------------------------- |
-| tsnet    | Any reachable tailnet node | Nodes with the push grant | Nodes with the push grant                                                  |
-| `listen` | Any reachable client       | Denied by default         | Any reachable client; see [debug endpoints](operations.md#debug-endpoints) |
+## Restrict read access
 
-## Read access
+A Nix substituter sends no credentials. Anyone who can reach a listener can:
 
-### Reads are unauthenticated
+- fetch a narinfo or NAR when they know its store hash;
+- read `/health` and `/metrics`;
+- use any other unauthenticated read endpoint.
 
-A Nix substituter receives no credentials, so cache reads cannot require
-authentication. Any client that can reach the listener can:
+There is no listing endpoint, but store hashes are not secrets. There is no
+per-path authorisation. Restrict network access when closures contain private
+artefacts or embedded secrets.
 
-- enumerate hash parts;
-- fetch narinfo files and NARs;
-- read `/health` and `/metrics`.
+Read-only plain listeners still expose downloads. The NixOS module warns when
+one listens beyond loopback.
 
-This includes every tailnet node that can reach a tsnet listener. If the store
-contains private build artefacts or secrets embedded in a closure, restrict
-network access to the cache node. There is no per-path authorisation.
+## Grant push access carefully
 
-The same rule applies to a plain `listen` address. Making that listener
-read-only prevents writes, but it does not restrict downloads. The NixOS module
-warns when a plain listener uses a non-loopback address.
+A node with the push grant can add arbitrary paths to the server's Nix store.
+The server checks that content matches its NAR hash; it cannot prove that the
+claimed store path came from a legitimate build.
 
-### Debug access
+When signing is configured, the cache signs what it serves. Lower priority
+numbers are preferred, and this cache defaults to 30. A malicious path can
+shadow an upstream path for clients that trust this cache.
 
-`/debug/` is the exception on tsnet. It requires the push grant because pprof can
-expose process memory. Plain listeners have different behaviour; see
-[debug endpoints](operations.md#debug-endpoints).
+Grant push access only to machines you trust as remote builders or Nix trusted
+users.
 
-## Write access
+## Use plain listeners safely
 
-### Pushers are trusted builders
+A plain socket has no caller identity. It refuses writes with `403` by default
+while continuing to serve reads.
 
-A node with the push grant can write arbitrary paths into the server's Nix
-store. The server verifies that the uploaded content matches its NAR hash, but
-it does not prove that the claimed store path came from a legitimate build.
+`services.tsnixcache.localWrite` enables writes on every configured plain
+listener. The CLI equivalent is `--local-write`. Enable it only when every
+client that can reach the socket is trusted to build.
 
-The cache signs everything it serves with its own key. Its default priority is
-30, ahead of `cache.nixos.org` at 40, so a poisoned path can shadow the upstream
-path for every client that trusts this cache.
+This includes all local users for a loopback listener and all reachable network
+clients for a non-loopback listener. The server logs a startup warning, and the
+NixOS module emits an evaluation warning.
 
-Grant push access only to machines you would trust as Nix remote builders or
-trusted users.
-
-### Plain listeners refuse writes
-
-A plain socket provides no caller identity. By default, every unsafe method is
-therefore rejected with `403`, while reads remain available for substituter use.
-
-This removes the path where any local account able to open the socket could
-import arbitrary content and have the cache re-sign it.
-
-### Enabling local writes
-
-`services.tsnixcache.localWrite` enables writes on plain listeners. The CLI
-equivalent is `--local-write`.
-
-Enabling it grants write access to:
-
-- every local user that can reach a loopback listener;
-- every network client that can reach a non-loopback listener.
-
-Use it only when every reachable client is trusted to build, such as on a
-single-user builder or behind a strict firewall. Treat that access as indirect
-use of the cache signing key.
-
-The server logs a startup warning for each affected listener, and the NixOS
-module emits an evaluation warning.
-
-## Auditing rejected writes
-
-Each rejected plain-listener write increments:
+Rejected plain-listener writes increment:
 
 ```text
 tsnixcache_auth_rejects_total{reason="local_write"}
 ```
 
-The server also logs the remote address and HTTP method.
+The log includes the remote address and method.
 
-## Listener edge cases
+## Protect debug access
 
-### No local listener
+Every `/debug/` request first passes Tailscale's debug-access check. It admits
+loopback and Tailscale-range addresses, `TS_ALLOW_DEBUG_IP`, trusted CIDRs, or a
+valid debug key. Other clients receive `403`.
 
-Set `services.tsnixcache.listen = [ ];` to run with tsnet only. The module emits
-no `--listen` flag in this case.
+On tsnet, the push grant is also required. On a plain listener, `/debug/gc`
+additionally requires local writes because it changes server state.
 
-The CLI falls back to `127.0.0.1:5000` only when neither `--listen` nor `--tsnet`
-was supplied. A server configured with tsnet therefore does not gain an implicit
-plain listener.
+See [Debug endpoints](operations.md#debug-endpoints) for operational guidance.
 
-### Empty CLI listener
+## Remove the plain listener
 
-Passing `--listen ""` explicitly is different from omitting `--listen`. The
-empty address resolves to no listener, so a command without tsnet exits with
-`no listeners configured` instead of using the loopback fallback.
+Set this when you want tsnet only:
+
+```nix
+services.tsnixcache.listen = [ ];
+```
+
+The CLI defaults to `127.0.0.1:5000` only when neither `--listen` nor `--tsnet`
+is supplied. Passing `--listen ""` explicitly creates no listener; without
+tsnet, `serve` exits with `no listeners configured`.

@@ -67,10 +67,11 @@ nix build .
 
 ## State and recovery
 
-| Data                                 | Location                                        | Lifetime                |
-| ------------------------------------ | ----------------------------------------------- | ----------------------- |
-| PID, control socket, status, and log | `$RUNNER_TEMP/tsnixcache.*`                     | Current job only        |
-| Retry queue                          | `$TSNIXCACHE_STATE_DIR` or the platform default | Preserve across retries |
+| Data                         | Location                                                                          | Lifetime                |
+| ---------------------------- | --------------------------------------------------------------------------------- | ----------------------- |
+| PID, status, and log         | `$RUNNER_TEMP/tsnixcache.*`                                                       | Current job only        |
+| Authenticated control socket | Private temporary directory                                                       | Watcher process         |
+| Retry queue                  | `${TSNIXCACHE_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/tsnixcache-watch}` | Preserve across retries |
 
 Hosted runners need explicit persistence for retry state between jobs.
 `RUNNER_TEMP` is cleared at job boundaries.
