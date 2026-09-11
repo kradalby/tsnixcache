@@ -1,10 +1,8 @@
 # Documentation
 
-| Guide                                                | Use it for                                                                               |
-| ---------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| [Configuration and module options](configuration.md) | Signing keys, NixOS and nix-darwin modules, manual pushes, compression, and verification |
-| [Push resilience](push-resilience.md)                | Retries, durable watcher state, timeouts, and clean shutdown                             |
-| [GitHub Actions](github-actions.md)                  | A tested CI lifecycle recipe                                                             |
-| [Security and trust model](security.md)              | Read exposure, push trust, and listener boundaries                                       |
-| [Operations](operations.md)                          | Recovery, monitoring, garbage collection, upgrades, and rollback                         |
-| [Development](development.md)                        | Repository checks and contribution conventions                                           |
+- [Configuration](configuration.md): set up the server and NixOS or nix-darwin clients.
+- [Push resilience](push-resilience.md): choose a delivery method and understand retries.
+- [GitHub Actions](github-actions.md): run a watcher for one CI build and drain it safely.
+- [Operations](operations.md): diagnose failures, monitor the cache, and configure GC.
+- [Security](security.md): understand read access, push trust, and listener boundaries.
+- [Development](development.md): run repository checks and contribute changes.

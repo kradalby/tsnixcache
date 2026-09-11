@@ -1,10 +1,14 @@
 # tsnixcache
 
 A Nix binary cache for your tailnet. It serves and signs store paths, accepts
-pushes from authorised Tailscale nodes, and includes modules for NixOS and
+pushes from trusted Tailscale nodes, and includes modules for NixOS and
 nix-darwin.
 
-## Add the flake
+Build once, and every machine on your tailnet can fetch the result.
+
+## Quick start
+
+Add the flake:
 
 ```nix
 inputs.tsnixcache = {
@@ -12,8 +16,6 @@ inputs.tsnixcache = {
   inputs.nixpkgs.follows = "nixpkgs";
 };
 ```
-
-## Configure the server
 
 Generate a signing key on the cache host:
 
@@ -27,18 +29,17 @@ sudo sh -c 'umask 077; nix run \
 
 The command writes the secret key to the file and prints the public key.
 
-Enable the NixOS module:
+Enable the NixOS server module:
 
 ```nix
-{ inputs, pkgs, ... }:
+{ inputs, ... }:
 {
   imports = [ inputs.tsnixcache.nixosModules.tsnixcache ];
+  nixpkgs.overlays = [ inputs.tsnixcache.overlays.default ];
 
   services.tsnixcache = {
     enable = true;
-    package = inputs.tsnixcache.packages.${pkgs.system}.default;
     signKeyFile = "/etc/tsnixcache/key";
-
     tsnet = [
       {
         hostname = "tsnixcache";
@@ -50,10 +51,8 @@ Enable the NixOS module:
 }
 ```
 
-See [server configuration](docs/configuration.md#server-nixos) for all module
-options and standalone server settings.
-
-Allow trusted builders to push with a Tailscale capability grant:
+Create the tsnet node with a tagged auth key that gives it `tag:cache`, then
+allow trusted builders to push:
 
 ```json
 {
@@ -69,68 +68,44 @@ Allow trusted builders to push with a Tailscale capability grant:
 }
 ```
 
-## Configure clients
-
-Use the public key printed during server setup:
+Enable the NixOS client module with the public key printed above:
 
 ```nix
-{ inputs, pkgs, ... }:
+{ inputs, ... }:
 {
   imports = [ inputs.tsnixcache.nixosModules.tsnixcache-client ];
+  nixpkgs.overlays = [ inputs.tsnixcache.overlays.default ];
 
   services.tsnixcache-client = {
     enable = true;
-    package = inputs.tsnixcache.packages.${pkgs.system}.default;
     publicKey = "cache.example.com:base64-public";
-
     postBuildHook.enable = true;
     watch.enable = true;
   };
 }
 ```
 
-The default cache URL is `http://tsnixcache`. `postBuildHook` uploads new builds;
-`watch` retries failed uploads and catches paths added by other means.
-
-See [client configuration](docs/configuration.md#client-nixos) for module options
-on NixOS and nix-darwin.
-
-## Use the cache
-
-Push a path manually:
+Check the server, push one path, and inspect its signature:
 
 ```sh
-tsnixcache push --to http://tsnixcache /run/current-system
+curl -fsS http://tsnixcache/health
+p=$(nix build --no-link --print-out-paths nixpkgs#hello)
+tsnixcache push --to http://tsnixcache "$p"
+curl -fsS "http://tsnixcache/$(basename "$p" | cut -c1-32).narinfo"
 ```
 
-Check the service:
-
-```sh
-curl http://tsnixcache/health
-```
-
-Run `tsnixcache --help` and `tsnixcache <command> --help` for command options.
+The narinfo should contain a `Sig:` line for `cache.example.com`.
 
 ## Documentation
 
-The [documentation index](docs/README.md) covers module options, push
-resilience, CI, security, operations, and development.
+Read the [documentation index](docs/README.md) for full setup, nix-darwin,
+retries, CI, security, monitoring, and garbage collection.
 
 ## Security
 
-Cache reads are unauthenticated. Any node that can reach the service can download
-stored paths and view health and metrics data. Limit network access if the store
-contains private artefacts.
-
-A node allowed to push is trusted to add paths that the cache will sign and serve.
-Grant the push capability only to trusted builders. Keep the signing key private
-and backed up.
-
-## Development
-
-See the [development guide](docs/development.md) for checks and contribution
-conventions.
+Cache reads are unauthenticated. Limit network access if store paths contain
+private data. Grant push access only to machines you trust as builders.
 
 ## Licence
 
-BSD 3-Clause. See [`LICENSE`](LICENSE).
+BSD 3-Clause. See [LICENSE](LICENSE).

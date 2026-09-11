@@ -1,75 +1,45 @@
 # Operations
 
-## Failure and recovery
+## Troubleshoot the server
 
-### Request limits
+Start with health and the service log:
 
-| Data                   | Default limit | Failure                                            |
-| ---------------------- | ------------: | -------------------------------------------------- |
-| Compressed NAR request |        16 GiB | HTTP `413`; the client does not retry              |
-| Decoded NAR            |        16 GiB | Import rejected by `--max-nar-size` / `maxNarSize` |
-| Narinfo request        |         1 MiB | HTTP `413`                                         |
-| Narinfo signatures     |   1,024 lines | Narinfo rejected                                   |
+```sh
+curl -sS http://HOST/health
+journalctl -u tsnixcache
+```
 
-The compressed and decoded NAR limits are independent. A closure member larger
-than either limit cannot be stored in this cache.
+A healthy server returns `"status":"ok"`. A `503` with
+`"store_reachable":false` means the server cannot read the Nix database.
 
-Verification and import decode the same open spool descriptor in two passes, so
-unverified data is never imported. Cancellation interrupts stream work and
-codec subprocesses after any blocked filesystem call returns.
+### Failed imports
 
-### Import deadlines and concurrency
+Check these in order:
 
-Import runs inside the narinfo `PUT` and has a 30-minute server deadline. The
-client allows 35 minutes, giving a slow healthy import time to finish.
+1. Search the server log for `import`. Import failures include `nix-store`
+   stderr.
+2. Check the available store and spool space in `/health`. They may be on
+   different filesystems.
+3. Inspect `tsnixcache_push_errors_total` by `reason`:
 
-`--import-concurrency` limits simultaneous imports. A push that waits more than
-30 seconds for a slot receives `503` with `Retry-After` and backs off.
+   | Reason          | Meaning                                                              |
+   | --------------- | -------------------------------------------------------------------- |
+   | `nar_body`      | The NAR request failed, exceeded its limit, or could not be spooled. |
+   | `narinfo_body`  | The narinfo request failed or exceeded its limit.                    |
+   | `narinfo_parse` | The narinfo was invalid or named an unsupported compression type.    |
+   | `narinfo_size`  | The declared decoded NAR size exceeded the configured limit.         |
+   | `busy`          | No import slot became available within 30 seconds.                   |
 
-### Restarts during import
+4. For the system store, confirm `nix-daemon` is running and the service user is
+   still in `nix.settings.trusted-users`.
 
-Shutdown waits up to 60 seconds for active requests. If an import is still
-running, the process stops and the client sends that path again later.
-
-Nix store imports are atomic, so the path is either complete or absent. A
-restart can waste transfer bandwidth, but it does not leave a partial path.
-
-### Spool maintenance
-
-The spool is swept every 10 minutes:
-
-- unpaired NARs expire after one day;
-- completed compressed-cache entries expire after one hour;
-- startup removes abandoned spool data under exclusive ownership.
-
-Two servers cannot share one compressed-cache directory.
-
-### Compressed cache behaviour
-
-The compressed cache has a 4 GiB file-data budget. Charges round up to 64 KiB
-and include:
-
-- files being created;
-- files held by active readers;
-- files whose removal failed.
-
-Eviction uses LRU and cannot reclaim a file while it is being read. Filesystem
-metadata and allocation overhead consume additional space outside the budget.
-
-A cold zstd narinfo `GET` materialises the compressed NAR to report its exact
-hash and size. `HEAD` does not compress. Use uncompressed serving when first-read
-latency matters more than transfer size.
-
-When an object cannot enter the compressed cache, narinfo advertises an
-uncompressed URL. A direct `.nar.zstd` request receives retryable `503`; it never
-receives an uncompressed body under compressed metadata.
+For repeated `busy` errors, reduce client parallelism or increase
+`--import-concurrency`.
 
 ### Degraded startup
 
-Nix opens its database in WAL mode. Before `nix-daemon` has opened the database,
-tsnixcache may be unable to read it.
-
-The server still binds its listeners and reports:
+The server can start before the Nix database is readable. It binds its listeners
+and returns:
 
 ```json
 {
@@ -78,227 +48,224 @@ The server still binds its listeners and reports:
 }
 ```
 
-It retries until the database becomes available, then logs
-`nix store database opened, no longer degraded`.
+It keeps trying the database and logs
+`nix store database opened, no longer degraded` after recovery. This commonly
+happens when the server starts before `nix-daemon` has opened its WAL database.
 
-### Troubleshooting failed imports
-
-Check these in order:
-
-1. **Server log:** `journalctl -u tsnixcache | grep import`
-   includes `nix-store` stderr and usually names the cause.
-2. **Disk and health:** `curl -s http://HOST/health`
-   shows store and spool capacity. The spool may be on a separate filesystem.
-3. **Failure reason:** inspect `tsnixcache_push_errors_total` by `reason`.
-   `nar_body`, `narinfo_body`, and `narinfo_parse` indicate rejected input;
-   `busy` indicates exhausted import slots.
-4. **Nix access:** confirm `nix-daemon` is running and the service remains in
-   `nix.settings.trusted-users`. A chroot store needs neither trusted-user
-   access nor the system daemon; configure it with `services.tsnixcache.store`.
-
-For repeated `busy` failures, increase `--import-concurrency` or reduce client
-parallelism.
-
-## Monitoring
+## Monitor the cache
 
 ### HTTP endpoints
 
-| Endpoint              | Purpose                                                     | Unhealthy response                 |
-| --------------------- | ----------------------------------------------------------- | ---------------------------------- |
-| `GET /health`         | Uptime, store reachability, free space, and path count      | `503` when the store is unreadable |
-| `GET /version`        | Build version; `dev` when unset by the linker               | —                                  |
-| `GET /nix-cache-info` | `StoreDir`, `WantMassQuery`, and `Priority` for Nix clients | —                                  |
-| `GET /metrics`        | Prometheus application, Go, and process metrics             | —                                  |
-| `GET /debug/`         | pprof, expvar, varz, and force-GC tools                     | Depends on listener type           |
+| Endpoint              | Purpose                                               | Failure                            |
+| --------------------- | ----------------------------------------------------- | ---------------------------------- |
+| `GET /health`         | Uptime, store access, available space, and path count | `503` when the store is unreadable |
+| `GET /version`        | Build version                                         | —                                  |
+| `GET /nix-cache-info` | Cache settings used by Nix                            | —                                  |
+| `GET /metrics`        | Prometheus application, Go, and process metrics       | —                                  |
+| `GET /debug/`         | pprof, expvar, varz, and force-GC tools               | Depends on the listener            |
 
-### Prometheus metrics
+### Prometheus
 
-The exporter covers cache hits and misses, pushes, push errors, imports, import
-duration, garbage collection, and store/spool disk use.
+The exporter covers lookups, pushes, rejected pushes, imports, garbage
+collection, and store and spool disk use.
 
-The NAR byte counters measure bytes on the wire:
+These counters measure NAR body bytes transferred:
 
 - `tsnixcache_nar_bytes_served_total`
 - `tsnixcache_nar_bytes_received_total`
 
-Use `rate(...[$__rate_interval])` for throughput. Prefer Grafana's
-`$__rate_interval` to a fixed window such as `[5m]`, which can under-report when
-the dashboard step grows beyond that window.
+Received bytes include failed uploads. With zstd serving enabled, served bytes
+count the compressed response. Use `rate(...[$__rate_interval])` for throughput
+in Grafana.
 
-With `serveCompression = "zstd"`, served bytes count the compressed response.
+### Grafana
 
-### Grafana dashboard
-
-Build the dashboard JSON for file-based provisioning:
+Build dashboard JSON for file provisioning:
 
 ```sh
 nix build .#grafanaDashboards
 ```
 
-The result contains `tsnixcache.json`.
-
-Or print the same JSON:
+The result contains `tsnixcache.json`. Print the same JSON with:
 
 ```sh
 nix run .#dashboard
 ```
 
-The dashboard is checked against metric names in the server source. Operational
-tiles require a successful matching scrape and gauge/up samples newer than 90
-seconds. Scrape at least every 30 seconds.
+Scrape at least every 30 seconds. The **Store paths** and **Store disk used**
+tiles require a successful scrape and samples newer than 90 seconds; otherwise
+they show **Unavailable**. The dashboard refreshes every 30 seconds. Historical
+and rate panels keep older samples.
 
-Missing, failed, or stale series display **Unavailable**. The default dashboard
-refresh can add up to 30 seconds of display delay, while historical and rate
-panels retain older data.
-
-The VM suite tests Prometheus queries, Grafana responses, and browser rendering
-during scrape failure, target removal, and recovery.
-
-### Compression resource bounds
-
-zstd responses use the bounded spool cache described above. Concurrent
-compression is also capped, so unauthenticated NAR reads cannot make disk or
-memory grow with the number of readers.
-
-### Watcher logs
-
-`tsnixcache watch` logs `watch: uploaded batch` at info level for each batch. It
-includes counts, human-readable bytes, average upload rate, and peak upload
-rate.
-
-`--verbose` adds a `watch: path` debug line for each discovered path before
-upload. It does not change the batch summary.
-
-### Debug endpoints
-
-`GET /debug/` exposes pprof, expvar, `/debug/varz`, and force-GC tools.
-
-- **tsnet:** every debug request requires the push grant because pprof can
-  expose process memory.
-- **Plain listener:** debug endpoints are available to every client that can
-  open the socket. Keep the listener on loopback. CPU profiles can be requested
-  without a duration bound.
-- **`/debug/gc`:** this stop-the-world operation is refused on a plain listener
-  unless `--local-write` is enabled. The restriction is based on the path
-  because the debug index invokes it with `GET`.
-
-### Service logs
+### Logs
 
 ```sh
 journalctl -u tsnixcache
 journalctl -u tsnixcache-watch
 ```
 
-The first command shows server logs; the second shows client watcher logs.
+The watcher logs `watch: uploaded batch` with uploaded, skipped, and failed
+counts. Failed paths are logged separately with their errors. `--verbose`
+enables debug messages for polling and notification activity.
+
+### Debug endpoints
+
+Every `/debug/` request passes Tailscale's debug-access check. It admits
+loopback and Tailscale-range addresses, `TS_ALLOW_DEBUG_IP`, trusted CIDRs, or a
+valid debug key. Other clients receive `403`.
+
+On tsnet, every debug request also requires the push grant. On a plain listener,
+`/debug/gc` additionally requires `--local-write` because it changes server
+state.
+
+Keep plain listeners on loopback. CPU profiles do not have a server-side
+duration limit.
 
 ## Garbage collection
 
-### Configure threshold rules
+### Add a rule
 
-The server accepts repeatable `gc.rules` module entries or `--gc-rule` CLI
-flags. Each rule uses `threshold:age`.
+Use `services.tsnixcache.gc.rules` or repeat `--gc-rule threshold:age` on the
+command line. This module rule:
 
-For example, `80:20d` means:
+```nix
+services.tsnixcache.gc.rules = [
+  {
+    threshold = 80;
+    olderThan = "20d";
+  }
+];
+```
 
-1. wait until the store filesystem reaches 80% usage;
-2. prune tsnixcache gcroots older than 20 days;
-3. run `nix-collect-garbage`.
+means: once store usage reaches 80%, remove eligible roots older than 20 days,
+then run `nix-collect-garbage`.
 
-Imported paths remain rooted until their age limit. Active imports retain their
-roots, and completed imports refresh the root age.
+The age is a minimum. A root remains until a disk threshold selects a rule that
+can remove it. Imports create the root before writing the path and refresh its
+age after a successful import, so GC does not reap an active or newly imported
+path.
 
-### Test rules with a dry run
+### Test a rule
 
-Apply rules once without changing the store:
+Run the rule once without changing the store:
 
 ```sh
 tsnixcache gc --gc-rule 80:20d --dry-run
 ```
 
-The command logs which roots it would prune and passes `--dry-run` to
-`nix-collect-garbage`. Run it before enabling a new rule set.
+This logs roots it would remove and passes `--dry-run` to
+`nix-collect-garbage`. The command refuses a missing `--gcroot-dir`.
 
-The command refuses a missing `--gcroot-dir`; a typo must not trigger collection
-without pruning the intended roots.
+### Know what can be removed
 
-### Store restrictions
+The collector considers an entry eligible when it:
 
-`nix-collect-garbage` always targets `/nix/store` and accepts no store argument.
-GC rules are therefore rejected with either:
+- has a hash-shaped name used by tsnixcache;
+- is a symlink into the configured store;
+- is old enough for the selected rule.
 
-- `--store`; or
-- a `--store-dir` other than `/nix/store`.
+Ownership is inferred from that shape. Keep unrelated hash-named store symlinks
+out of the configured tsnixcache root directory. Names such as
+`system-*-link` and `booted-system` do not match and are left alone.
 
-This prevents measuring and pruning one store while collecting another.
+Rules should get more aggressive as the disk fills. A rule set such as
+`80:5d 90:20d` is accepted but warns because the higher threshold keeps paths
+longer. Ages below one minute also warn.
 
-### Disk usage calculation
+### Understand the threshold
 
-The threshold is calculated as:
+GC calculates store usage as:
 
 ```text
 (Blocks - Bfree) / Blocks
 ```
 
-Root-reserved blocks remain free in this calculation. `df` instead uses
-`used / (used + Bavail)`, where `Bavail` excludes the reserve. The store disk
-gauge and dashboard use the GC calculation.
+The store disk gauge and dashboard use the same calculation. `df` uses
+`used / (used + Bavail)`, so it can show a different percentage when the
+filesystem reserves blocks for root.
 
-### Root ownership and locking
+### Collection cooldown
 
-Imports and pruning share persistent ownership locks. A stale candidate is
-checked again while holding its stripe lock.
+After a collection frees no space, the next eligible check skips collection
+when it also removes no roots and the cooldown has not elapsed. The cooldown is
+`max(--gc-interval, 1h)`. Removing any root bypasses it.
 
-A failed re-push retains an existing root; rollback removes only a root created
-by that import. Root-run GC and service imports share the configured root
-directory's ownership.
+`tsnixcache_gc_freed_bytes_total` measures the increase in filesystem-available
+blocks around a successful collection. Treat it as a lower bound: concurrent
+writes and copy-on-write filesystems can hide reclaimed space.
 
-Keep the `.locks` directory and its inodes intact during upgrades.
+### Store restrictions
 
-### Collection backoff
+`nix-collect-garbage` targets the default `/nix/store`. GC rules are rejected
+with `--store` or a different `--store-dir`, which avoids pruning one store and
+collecting another.
 
-When a run prunes no roots and frees no space, another `nix-collect-garbage`
-does not start until `max(--gc-interval, 1h)` has elapsed. A store filled with
-live paths is therefore not scanned every interval.
+Imports and pruning coordinate access to each root. Preserve the configured
+root directory and its `.locks` directory during upgrades. A failed re-push
+keeps a root that existed before that attempt.
 
-### Freed-space metric
+## Upgrade or roll back
 
-`tsnixcache_gc_freed_bytes_total` is a lower bound. It records a whole-filesystem
-`statfs` delta around collection.
+Stop watchers, servers, and standalone GC jobs before replacing the binaries.
+Preserve:
 
-Concurrent writes and copy-on-write filesystems such as btrfs and ZFS can hide
-reclaimed space. A zero value does not prove that nothing was collected. The
-backoff still limits repeated collection to one attempt per cooldown.
+- the configured GC root directory, including `.locks`;
+- watcher retry state;
+- the signing key and tsnet state.
 
-### What can be pruned
+Install matching CLI and module versions, then restart the services. Unknown
+newer watcher state fails visibly instead of being reset.
 
-Only tsnixcache roots named after a store path hash are eligible. Entries owned
-by Nix, including `system-*-link` and `booted-system`, are left untouched
-regardless of age.
+Before rolling back, stop every newer process. An older watcher cannot resume a
+newer queue, and old and new processes must not write the same root directory at
+the same time.
 
-Rules whose retention ages become looser at higher thresholds are accepted with
-a warning. For example, `80:5d 90:20d` keeps paths longer as the disk fills.
-Ages under one minute also produce a warning because roots should provide
-useful retention after import.
+## Limits and recovery reference
 
-## Upgrading and rollback
+### Request limits
 
-### Upgrade
+| Data                   | Default limit | Response                                            |
+| ---------------------- | ------------: | --------------------------------------------------- |
+| Compressed NAR request |        16 GiB | `413`; the client does not retry                    |
+| Decoded NAR            |        16 GiB | Import rejected by `--max-nar-size` or `maxNarSize` |
+| Narinfo request        |         1 MiB | `413`                                               |
+| Narinfo signatures     |   1,024 lines | Narinfo rejected                                    |
 
-1. Stop old watchers, servers, and standalone GC jobs.
-2. Preserve GC roots, `.locks` inodes, and persistent retry state.
-3. Install matching CLI and module versions.
-4. Restart the services.
-5. Push known affected build closures explicitly if old in-memory retries may
-   have been lost.
+The compressed and decoded NAR limits are independent.
 
-Old binaries do not honour the current root locks. The queue schema is
-versioned; an unknown newer schema fails without resetting state.
+The server verifies the complete decoded NAR before importing it. Import has a
+30-minute deadline. Clients allow up to 35 minutes for the final narinfo request,
+unless an earlier overall deadline or cancellation applies.
 
-### Roll back
+`--import-concurrency` limits simultaneous imports. Waiting 30 seconds for a
+slot returns `503` with `Retry-After: 30`.
 
-1. Stop all newer processes.
-2. Preserve retry state and roots for later recovery.
-3. Install the older version.
+Shutdown gives active HTTP requests 60 seconds to finish. If an import is still
+running when the process exits, the client can send the path again. Nix imports
+leave the path complete or absent.
 
-An old watcher cannot resume the newer durable queue. Never run old and new root
-writers against the same directory at the same time.
+### Spool and compressed cache
+
+The server checks the spool every 10 minutes:
+
+- unpaired NAR uploads become eligible for removal after 24 hours without a
+  write;
+- unused compressed NARs become eligible after one hour;
+- startup removes abandoned uploads and compressed NARs.
+
+The compressed cache has a 4 GiB file-data budget and evicts the least recently
+used files. Files being created or read still count against the budget and
+cannot be evicted. Filesystem metadata uses additional space. Only compression
+work is concurrency-limited; NAR readers are not capped.
+
+When narinfo compression fails, the server advertises an uncompressed NAR. An
+explicit `.nar.zstd` request returns:
+
+| Condition                             | Response                     |
+| ------------------------------------- | ---------------------------- |
+| Compression busy or cache budget full | `503` with `Retry-After: 10` |
+| Other compression or cache failure    | `500`                        |
+| zstd serving disabled                 | `404`                        |
+
+The server never sends an uncompressed body under zstd metadata. Two servers
+cannot share one compressed-cache directory.

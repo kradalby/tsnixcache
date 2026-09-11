@@ -1,128 +1,124 @@
 # Push resilience
 
-tsnixcache has three delivery mechanisms:
+Choose the delivery method that matches the caller:
 
-| Mechanism          | Failure behaviour                                                               |
-| ------------------ | ------------------------------------------------------------------------------- |
-| `post-build-hook`  | Logs the failure and exits successfully so the Nix build can continue.          |
-| `tsnixcache push`  | Retries within its deadline and exits non-zero if any path remains undelivered. |
-| `tsnixcache watch` | Stores pending work on disk and continues retrying across restarts.             |
+| Method             | Use it when                                             | Failure behaviour                                  |
+| ------------------ | ------------------------------------------------------- | -------------------------------------------------- |
+| Post-build hook    | A Nix build should never fail because the cache is down | Logs the failure and exits successfully            |
+| `tsnixcache push`  | A person or script needs the result now                 | Returns non-zero when any path remains undelivered |
+| `tsnixcache watch` | Delivery must survive an outage or restart              | Keeps pending work on disk and retries later       |
 
-## Upload retries
+I recommend the post-build hook for exact build outputs and the watcher as a
+fallback for paths added by other means.
 
-`tsnixcache push` retries each path with exponential backoff under the
-`--attempts` and `--timeout` limits. A brief restart, deployment, or load spike
-therefore heals without intervention.
+## Retry a manual push
 
-Retries operate per path. An uploaded path is skipped after a cheap narinfo
-`HEAD`, while a partially uploaded path is sent again in full. Uploads do not
-resume part-way through a NAR.
+`push` resolves each requested closure and retries transient failures per path.
+It skips a path already present on the server. A partial NAR upload restarts from
+the beginning.
 
-One failed path does not stop the rest of the batch. If a path is garbage
-collected after closure resolution, only that path is reported as failed.
+Independent paths continue after a failure. Paths that depend on a failed
+closure member are also reported as failed because their references did not
+arrive.
 
-Most `4xx` responses are permanent and are not retried. The retryable exceptions
-are `408`, `425`, and `429`; server errors are also retried. This prevents a
-revoked grant or oversized NAR from being attempted repeatedly.
+`--attempts` defaults to five per path. `--timeout` is one deadline for the whole
+command and defaults to `0`, which disables that deadline.
 
-## Timeouts
+The client retries server errors and HTTP `408`, `425`, and `429`. Other `4xx`
+responses are permanent. This stops retries after errors such as a missing push
+grant or an oversized request.
 
-### Stalled uploads
+## Understand upload timeouts
 
-`--stall-timeout` defaults to 60 seconds. A NAR transfer that makes no progress
-for that long is cancelled and retried, allowing an interrupted network
-connection to fail promptly.
+| Phase                       |          Default | Behaviour                                        |
+| --------------------------- | ---------------: | ------------------------------------------------ |
+| NAR upload without progress |       60 seconds | Cancel and retry the path                        |
+| Final narinfo request       | Up to 35 minutes | Stop that path without another immediate attempt |
+| Response body read          | 60 seconds total | Retry unless the HTTP status is permanent        |
+| Server import               |       30 minutes | Return an import failure                         |
 
-### Imports
+The 35-minute narinfo limit is a ceiling. An earlier `--timeout`, watcher stop,
+or other cancellation ends it sooner. The module's post-build hook sets a
+60-second overall deadline by default.
 
-The final `.narinfo` request is exempt from stall detection. The server verifies
-and imports the path before responding, so a healthy large import may be silent
-for a long time.
+The final narinfo request can be quiet while the server verifies and imports a
+large path. It is not subject to NAR progress detection. Error response bodies
+are read up to 4 KiB, with one extra byte used to detect truncation.
 
-That request has a fixed 35-minute deadline, just above the server's 30-minute
-import deadline. Reaching it ends the current push without another immediate
-attempt; the watcher can retry later.
+## Keep watcher retries across restarts
 
-Response bodies retain the 60-second stall deadline. Error diagnostics are
-limited to 4 KiB plus one byte used to detect truncation. Body-read failures
-remain eligible for the configured upload retries.
+`watch` records discovered paths, retries, backoff, expiry, and drain progress
+in a private state database. A process crash can cause a completed upload to be
+sent again, but does not lose pending work.
 
-## Durable watcher state
+State is separate for each combination of:
 
-`watch` records the following data transactionally in a private SQLite database:
+- source Nix database path;
+- store directory;
+- destination URL.
 
-- discovered paths and the polling cursor;
-- pending retries and their backoff;
-- first-failure times and expiry;
-- drain acknowledgements and terminal results.
+Keep `--state-dir` across restarts. A second watcher cannot open the same state
+at the same time. Corrupt or unsupported state fails visibly instead of starting
+with an empty queue.
 
-An outage or process crash therefore preserves pending work.
+### Backoff and batch size
 
-### Backoff and batching
+Per-path backoff starts at 30 seconds, doubles up to 10 minutes, and adds 25%
+jitter. Change these with `--retry-backoff-base` and `--retry-backoff-max`.
 
-Per-path backoff starts at `--retry-backoff-base` (30 seconds) and grows to
-`--retry-backoff-max` (10 minutes), with 25% jitter.
-
-`--retry-queue-size` defaults to 512 and limits discovery and selection batch
-sizes. Overflow remains on disk; this setting is not a lossy queue capacity. A
-zero value selects bounded defaults.
-
-Each destination and source database pair has its own state identity. Competing
-owners, corrupt state, and unknown schemas fail visibly instead of resetting the
-queue. Keep the state directory across restarts.
+`--retry-queue-size` defaults to 512 and limits how much work is selected at
+once. It is not a queue capacity: remaining work stays in the source or state
+database. A value of `0` uses bounded internal batch sizes.
 
 ### Expiry
 
-`--retry-max-age` defaults to two hours; zero disables expiry. When work expires:
+`--retry-max-age` defaults to two hours from the first failed attempt. `0`
+disables expiry.
 
-- the current drain fails;
-- the path remains as a tombstone until it can be retired;
-- later sessions may still succeed;
-- disabling expiry does not revive an existing tombstone.
+An expired path is no longer retried, and the next drain reports failure. It is
+removed from retry state after it disappears from the source database. If Nix
+registers the same path again later, that new registration can reset the expiry.
+Changing the option to `0` does not revive work that already expired.
 
-A tombstone retires when its source path disappears. Registering that path again
-can reset expiry. Source replacement is reconciled conservatively, and unrelated
-database files never inherit another source's cursor.
+## Drain before shutdown
 
-## Draining and shutdown
+On shutdown, the watcher spends up to 30 seconds discovering and uploading work
+registered before the stop request. Each non-expired pending path that still
+exists gets one final upload invocation even when its normal backoff is active.
+That invocation keeps the configured per-upload attempt count, which defaults
+to two for `watch`.
 
-Shutdown captures a source boundary and gives the watcher 30 seconds to discover
-and drain every page through it.
+If the drain does not finish, the watcher exits non-zero and keeps pending work
+for the next start. The NixOS and nix-darwin services allow 90 seconds for the
+watcher to stop.
 
-Each pending path receives at most one recorded final upload invocation for that
-drain generation, even when its normal backoff is in the future. The configured
-per-upload attempts still apply; the default is two.
+### Wait for a named session
 
-If draining fails, the boundary, pending work, and consumed attempts remain in
-state. Restarting resumes the saved ages and backoff. Repeated immediate stops do
-not grant extra attempts.
+Pass `--pid-file` when another process must wait for delivery. The watcher then
+creates a status file and a private authenticated control socket.
 
-An incomplete drain exits non-zero and remains visible to a later `wait-for`.
-Service managers allow 90 seconds for shutdown.
-
-## Session lifecycle
-
-When `--pid-file` is set, the watcher also creates:
-
-- an atomic status record;
-- a private authenticated control socket.
-
-`wait-for --ready` prints the session token. Use that token to request the final
-drain:
+Wait for readiness and save the printed session token:
 
 ```sh
-tsnixcache wait-for --stop --session TOKEN --pid-file /path/to/watch.pid
+token=$(tsnixcache wait-for --ready --pid-file /path/to/watch.pid)
 ```
 
-A late waiter reads the recorded terminal result. Missing status produces a
-bounded error. Legacy PID-only files are rejected after the startup timeout; in
-that case, restart the watcher with the matching CLI.
+Request the final drain and wait for its result:
 
-`--idle-exit` defaults to zero. Explicit stop is the reliable way to finish a
-build session.
+```sh
+tsnixcache wait-for --stop --session "$token" \
+  --pid-file /path/to/watch.pid
+```
 
-## Observing failures
+The terminal result remains in `<pid-file>.status.json` after the watcher exits.
+Without `--pid-file`, `wait-for` cannot observe the result. Missing status is
+bounded by `--pid-file-timeout`, which defaults to two minutes.
 
-Client-side push metrics are intentionally absent because `tsnixcache push` is
-short-lived and has nothing persistent to scrape. Check the post-build hook log
-or the `tsnixcache watch` service log for persistent failures.
+Use an explicit stop for CI and other bounded build sessions. `--idle-exit`
+defaults to `0`, so the watcher otherwise keeps running.
+
+## Observe failures
+
+`tsnixcache push` is short-lived and exposes no client-side Prometheus metrics.
+Use its exit status and logs. For persistent delivery, inspect the
+`tsnixcache watch` service log.
