@@ -32,6 +32,9 @@ func newWatchCmd() *ff.Command {
 	to := fs.StringLong("to", "", "target cache URL (required)")
 	idleExit := durationFlag(fs, "idle-exit", 0,
 		"drain after this long without delivery progress (0 = run until explicitly stopped)")
+	// Thirty seconds leaves room in the services' 90-second stop budget.
+	drainTimeout := durationFlag(fs, "drain-timeout", 30*time.Second,
+		"final drain deadline (0 = no deadline)")
 	pollInterval := durationFlag(fs, "poll-interval", 30*time.Second, "DB poll interval (safety net; raise on battery)")
 	pidFile := fs.StringLong("pid-file", "",
 		"session PID path in a mode 0700 directory (mktemp -d); keeps status for wait-for")
@@ -95,6 +98,7 @@ func newWatchCmd() *ff.Command {
 				StoreDir:         *storeDir,
 				TargetURL:        *to,
 				IdleExit:         *idleExit,
+				DrainTimeout:     *drainTimeout,
 				PollInterval:     *pollInterval,
 				StallTimeout:     *stallTimeout,
 				Attempts:         *attempts,
@@ -131,7 +135,8 @@ func validateWatchOptions(w *watch.Watcher, args []string) error {
 		return errWatchPollInterval
 	}
 
-	if w.IdleExit < 0 || w.RetryBackoffBase <= 0 || w.RetryBackoffMax < w.RetryBackoffBase ||
+	if w.IdleExit < 0 || w.DrainTimeout < 0 ||
+		w.RetryBackoffBase <= 0 || w.RetryBackoffMax < w.RetryBackoffBase ||
 		w.RetryMaxAge < 0 || w.RetryQueueSize < 0 || len(args) != 0 {
 		return errWatchRetryConfig
 	}

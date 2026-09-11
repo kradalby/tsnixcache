@@ -24,7 +24,8 @@ func newWaitForCmd() *ff.Command {
 	stop := fs.BoolLong("stop", "request a final drain and wait for its result")
 	token := fs.StringLong("session", "", "expected session identifier, as printed by --ready")
 	startup := durationFlag(fs, "pid-file-timeout", 2*time.Minute, "session startup timeout (must be positive)")
-	timeout := durationFlag(fs, "timeout", 2*time.Minute, "overall wait timeout (0 = until interrupted)")
+	timeout := durationFlag(fs, "timeout", 2*time.Minute,
+		"overall timeout for readiness or final delivery (0 = until interrupted)")
 
 	return &ff.Command{
 		Name: "wait-for", Usage: "tsnixcache wait-for --pid-file <path> [--ready | --stop]", Flags: fs,

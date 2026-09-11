@@ -361,7 +361,7 @@ func (p *poller) sourceError(err error) error {
 }
 
 func (p *poller) finish(ctx context.Context) error {
-	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), orDuration(p.w.drainTimeoutForTesting, drainTimeout))
+	ctx, cancel := p.drainContext(ctx)
 	defer cancel()
 
 	err := p.beginDrain(ctx)
@@ -429,6 +429,16 @@ func (p *poller) finish(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (p *poller) drainContext(ctx context.Context) (context.Context, context.CancelFunc) {
+	ctx = context.WithoutCancel(ctx)
+
+	if p.w.DrainTimeout > 0 {
+		return context.WithTimeout(ctx, p.w.DrainTimeout)
+	}
+
+	return ctx, func() {}
 }
 
 func (p *poller) complete(ctx context.Context) (bool, error) {

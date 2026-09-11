@@ -28,9 +28,6 @@ var (
 	errDBUnreadable = errors.New("watch: Nix database unreadable")
 )
 
-// Keep the final drain within the service manager's stop budget.
-const drainTimeout = 30 * time.Second
-
 // pathLogLimit caps the per-path failure warnings of a single upload, matching
 // the cap samplePaths puts on the batch line.
 const pathLogLimit = 8
@@ -85,7 +82,6 @@ type Watcher struct {
 	TargetURL string
 	// Ready runs after the source and durable state are usable.
 	Ready                         func() error
-	drainTimeoutForTesting        time.Duration
 	notificationFactoryForTesting func() (*fsnotify.Watcher, error)
 
 	// Report records durable progress before drain I/O and before state closes.
@@ -106,6 +102,9 @@ type Watcher struct {
 	// IdleExit starts a final drain after this long without delivery progress.
 	// Incomplete delivery returns an error and remains durable for restart.
 	IdleExit time.Duration
+
+	// DrainTimeout bounds the final drain. Zero means no deadline.
+	DrainTimeout time.Duration
 
 	// StallTimeout cancels an upload with no progress for this long (default 60s),
 	// so a laptop dropping offline fails fast into the retry queue.
@@ -264,11 +263,6 @@ func (w *Watcher) Watch(ctx context.Context) (retErr error) { //nolint:cyclop
 			}
 		}
 	}
-}
-
-// SetDrainTimeoutForTesting shortens the fixed shutdown budget in tests.
-func (w *Watcher) SetDrainTimeoutForTesting(timeout time.Duration) {
-	w.drainTimeoutForTesting = timeout
 }
 
 // ValidPath is a store path and its uncompressed NAR size, as recorded in the

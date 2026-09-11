@@ -82,11 +82,11 @@ Changing the option to `0` does not revive work that already expired.
 
 ## Drain before shutdown
 
-On shutdown, the watcher spends up to 30 seconds discovering and uploading work
-registered before the stop request. Each non-expired pending path that still
-exists gets one final upload invocation even when its normal backoff is active.
-That invocation keeps the configured per-upload attempt count, which defaults
-to two for `watch`.
+On shutdown, the watcher discovers and uploads work registered before the stop
+request. `--drain-timeout` limits this to 30 seconds by default; `0` removes the
+deadline. Each non-expired pending path that still exists gets one final upload
+invocation even when its normal backoff is active. That invocation keeps the
+configured per-upload attempt count, which defaults to two for `watch`.
 
 If the drain does not finish, the watcher exits non-zero and keeps pending work
 for the next start. The NixOS and nix-darwin services allow 90 seconds for the
@@ -116,6 +116,11 @@ bounded by `--pid-file-timeout`, which defaults to two minutes.
 
 Use an explicit stop for CI and other bounded build sessions. `--idle-exit`
 defaults to `0`, so the watcher otherwise keeps running.
+
+`wait-for --timeout` bounds the whole readiness or stop wait. Set it and
+`watch --drain-timeout` to `0` when the job or service manager already provides
+the outer deadline. A second signal or the job's forced termination ends a stuck
+drain.
 
 ## Observe failures
 
