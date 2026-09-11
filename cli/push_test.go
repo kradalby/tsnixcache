@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"slices"
 	"testing"
 	"time"
@@ -142,5 +143,65 @@ func TestPathArgsStdin(t *testing.T) {
 	want := []string{"/nix/store/c-three", "/nix/store/a-one", "/nix/store/b-two"}
 	if !slices.Equal(got, want) {
 		t.Errorf("pathArgs = %v, want %v", got, want)
+	}
+}
+
+// TestPushDashReadsStdin parses a real command line: ff v4.0.0-beta.1 dropped a
+// bare "-" before push ever saw it, which TestPathArgsStdin cannot catch.
+func TestPushDashReadsStdin(t *testing.T) {
+	const (
+		stdinPath = "/nix/store/00000000000000000000000000000000-from-stdin"
+		closed    = "http://127.0.0.1:1" // nothing listens: no upload can start
+	)
+
+	tests := []struct {
+		name    string
+		args    []string // after "push --to"
+		wantErr error    // nil: stdinPath must reach nix path-info
+	}{
+		{name: "dash operand", args: []string{closed, "-"}},
+		{name: "dash after --", args: []string{closed, "--", "-"}},
+		{name: "dash as flag value", args: []string{"-", "/nix/store/x"}, wantErr: errCacheURL},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// The fake nix records what push resolves, then fails so nothing uploads.
+			dir := t.TempDir()
+			record := filepath.Join(dir, "args")
+			script := "#!/bin/sh\necho \"$@\" > " + record + "\nexit 1\n"
+			require.NoError(t, os.WriteFile(filepath.Join(dir, "nix"), []byte(script), 0o700)) // #nosec G306 -- fake binary
+			t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
+
+			pr, pw, err := os.Pipe()
+			require.NoError(t, err)
+
+			startTestTask(t, func() {
+				fmt.Fprintln(pw, stdinPath)
+				pw.Close() // #nosec G104 -- test writer
+			})
+
+			stdin := os.Stdin
+			os.Stdin = pr
+
+			t.Cleanup(func() {
+				os.Stdin = stdin
+
+				pr.Close() // #nosec G104 -- test cleanup
+			})
+
+			err = newRootCmd().ParseAndRun(t.Context(), append([]string{"push", "--to"}, tt.args...))
+			require.Error(t, err)
+
+			if tt.wantErr != nil {
+				require.ErrorIs(t, err, tt.wantErr)
+
+				return
+			}
+
+			got, err := os.ReadFile(record) // #nosec G304 -- test temp file
+			require.NoError(t, err)
+			require.Contains(t, string(got), stdinPath)
+		})
 	}
 }
