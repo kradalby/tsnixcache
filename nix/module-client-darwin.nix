@@ -90,7 +90,7 @@ in
 
       stateDir = lib.mkOption {
         type = lib.types.str;
-        default = "/var/lib/tsnixcache-watch";
+        default = "/var/db/tsnixcache-watch";
         description = "Private persistent retry state directory; retain across upgrades and restarts.";
       };
 
