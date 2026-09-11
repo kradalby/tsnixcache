@@ -88,13 +88,20 @@ func NewSession(ctx context.Context, path string, cancel context.CancelFunc) (_ 
 		return nil, err
 	}
 
-	info, err := os.Stat(filepath.Dir(path))
+	dir := filepath.Dir(path)
+
+	info, err := os.Stat(dir)
 	if err != nil {
 		return nil, err
 	}
 
-	if !info.IsDir() || info.Mode().Perm()&0o077 != 0 {
-		return nil, errSessionPrivate
+	if !info.IsDir() {
+		return nil, fmt.Errorf("%w: %s is not a directory", errSessionPrivate, dir)
+	}
+
+	if info.Mode().Perm()&0o077 != 0 {
+		return nil, fmt.Errorf("%w: %s is mode %#o, want 0700 (mktemp -d makes one)",
+			errSessionPrivate, dir, info.Mode().Perm())
 	}
 
 	lock, err := sessionLock(path)

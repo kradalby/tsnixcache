@@ -27,6 +27,23 @@ func sessionPath(tb testing.TB) string {
 	return filepath.Join(dir, "watch.pid")
 }
 
+func TestSessionNamesSharedDirectory(t *testing.T) {
+	path := sessionPath(t)
+	dir := filepath.Dir(path)
+	require.NoError(t, os.Chmod(dir, 0o755)) // #nosec G302 -- exercises refusal of a shared session directory.
+
+	_, err := NewSession(t.Context(), path, func() {})
+	require.ErrorIs(t, err, errSessionPrivate)
+	require.ErrorContains(t, err, dir+" is mode 0755")
+
+	file := filepath.Join(t.TempDir(), "file")
+	require.NoError(t, os.WriteFile(file, nil, 0o700)) // #nosec G306 -- a private mode must not hide the file
+
+	_, err = NewSession(t.Context(), filepath.Join(file, "watch.pid"), func() {})
+	require.ErrorIs(t, err, errSessionPrivate)
+	require.ErrorContains(t, err, file+" is not a directory")
+}
+
 func TestSessionLifecycle(t *testing.T) {
 	path := sessionPath(t)
 

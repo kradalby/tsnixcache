@@ -34,8 +34,9 @@ func newWatchCmd() *ff.Command {
 		"drain after this long without delivery progress (0 = run until explicitly stopped)")
 	pollInterval := durationFlag(fs, "poll-interval", 30*time.Second, "DB poll interval (safety net; raise on battery)")
 	pidFile := fs.StringLong("pid-file", "",
-		"session PID path in a private directory; retains companion status for wait-for")
-	stateDir := fs.StringLong("state-dir", "", "persistent retry state directory (default: user state directory)")
+		"session PID path in a mode 0700 directory (mktemp -d); keeps status for wait-for")
+	stateDir := fs.StringLong("state-dir", "",
+		"persistent retry state directory, mode 0700 (default: user state directory)")
 	verbose := fs.BoolLongDefault("verbose", false, "log per-path uploads at debug level")
 	// Not disableable: upload substitutes its own 60s default for a zero.
 	stallTimeout := durationFlag(fs, "stall-timeout", 60*time.Second,

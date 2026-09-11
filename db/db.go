@@ -180,7 +180,7 @@ func preparePath(path string) (string, error) {
 	}
 
 	if info.Mode().Perm()&0o077 != 0 {
-		return "", errPrivateDirectory
+		return "", fmt.Errorf("%w: %s is mode %#o", errPrivateDirectory, filepath.Dir(path), info.Mode().Perm())
 	}
 
 	return path, nil
