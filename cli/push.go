@@ -11,7 +11,6 @@ import (
 	"log/slog"
 	"net/url"
 	"os"
-	"slices"
 	"strings"
 	"time"
 
@@ -26,7 +25,7 @@ import (
 
 var (
 	errPushToRequired   = errors.New("push: --to is required")
-	errPushPathRequired = errors.New("push: at least one store path is required")
+	errPushPathRequired = errors.New("push: at least one store path is required (\"-- -\" reads them from stdin)")
 	errPushJobs         = errors.New("push: --jobs must be at least 1")
 	errPushAttempts     = errors.New("push: --attempts must be at least 1")
 	errPushStallTimeout = errors.New("push: --stall-timeout must be greater than 0")
@@ -51,9 +50,9 @@ func newPushCmd() *ff.Command {
 
 	return &ff.Command{
 		Name:      "push",
-		Usage:     "tsnixcache push --to <url> <path>... (\"-\" reads paths from stdin)",
+		Usage:     "tsnixcache push --to <url> <path>... (\"-- -\" reads paths from stdin)",
 		ShortHelp: "Push store paths and their closure to a remote cache.",
-		Flags:     &operandFlags{FlagSet: fs},
+		Flags:     fs,
 		Exec: func(ctx context.Context, args []string) error {
 			if *to == "" {
 				*to = envknob.String("TSNIXCACHE_URL")
@@ -98,48 +97,11 @@ func newPushCmd() *ff.Command {
 	}
 }
 
-// operandFlags keeps a bare "-" as an operand. ff v4.0.0-beta.1 parses it as
-// neither a short nor a long flag and silently drops it, so `push -` never read
-// stdin. Package flag stops at "-" like any other operand; this does the same.
-// ponytail: delete once ff keeps "-".
-type operandFlags struct {
-	*ff.FlagSet
-
-	args []string
-}
-
-func (f *operandFlags) Parse(args []string) error {
-	i := slices.Index(args, "-")
-	if i < 0 {
-		return f.parse(args, nil)
-	}
-
-	if f.parse(args[:i], args[i:]) == nil {
-		return nil
-	}
-
-	// The "-" is a flag's value, as in --to -: parse exactly as ff would.
-	err := f.Reset()
-	if err != nil {
-		return err
-	}
-
-	return f.parse(args, nil)
-}
-
-func (f *operandFlags) GetArgs() []string { return f.args }
-
-func (f *operandFlags) parse(args, operands []string) error {
-	err := f.FlagSet.Parse(args)
-	f.args = slices.Concat(f.FlagSet.GetArgs(), operands)
-
-	return err
-}
-
 // pathArgs returns the store paths to push, expanding the conventional "-"
-// argument into the lines on stdin so a closure can be piped in:
+// argument into the lines on stdin so a closure can be piped in. ff drops a
+// bare "-" ahead of every other operand, so it follows "--":
 //
-//	nix-store -qR /run/current-system | tsnixcache push --to http://cache -
+//	nix-store -qR /run/current-system | tsnixcache push --to http://cache -- -
 func pathArgs(args []string) ([]string, error) {
 	paths := make([]string, 0, len(args))
 

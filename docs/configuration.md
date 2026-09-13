@@ -151,11 +151,11 @@ Push a path and its closure with:
 tsnixcache push --to http://tsnixcache /run/current-system
 ```
 
-Read paths from standard input with `-`:
+Read paths from standard input with `-- -`:
 
 ```sh
 nix path-info --recursive /run/current-system \
-  | tsnixcache push --to http://tsnixcache -
+  | tsnixcache push --to http://tsnixcache -- -
 ```
 
 `push` skips paths already present and uploads independent paths in parallel.
