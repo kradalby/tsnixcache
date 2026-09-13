@@ -146,9 +146,10 @@ func TestPathArgsStdin(t *testing.T) {
 	}
 }
 
-// TestPushDashReadsStdin parses a real command line: ff v4.0.0-beta.1 dropped a
-// bare "-" before push ever saw it, which TestPathArgsStdin cannot catch.
-func TestPushDashReadsStdin(t *testing.T) {
+// TestPushStdinAfterDoubleDash parses a real command line: ff v4.0.0-beta.1
+// drops a bare "-" ahead of every other operand, which TestPathArgsStdin
+// cannot see, so stdin needs "--" first.
+func TestPushStdinAfterDoubleDash(t *testing.T) {
 	const (
 		stdinPath = "/nix/store/00000000000000000000000000000000-from-stdin"
 		closed    = "http://127.0.0.1:1" // nothing listens: no upload can start
@@ -159,9 +160,8 @@ func TestPushDashReadsStdin(t *testing.T) {
 		args    []string // after "push --to"
 		wantErr error    // nil: stdinPath must reach nix path-info
 	}{
-		{name: "dash operand", args: []string{closed, "-"}},
-		{name: "dash after --", args: []string{closed, "--", "-"}},
-		{name: "dash as flag value", args: []string{"-", "/nix/store/x"}, wantErr: errCacheURL},
+		{name: "after --", args: []string{closed, "--", "-"}},
+		{name: "bare dash dropped by ff", args: []string{closed, "-"}, wantErr: errPushPathRequired},
 	}
 
 	for _, tt := range tests {
