@@ -78,22 +78,25 @@
     },
     "headscale": {
       "inputs": {
+        "flake-checks": [
+          "flake-checks"
+        ],
         "flake-utils": "flake-utils_3",
         "nixpkgs": [
           "nixpkgs"
         ]
       },
       "locked": {
-        "lastModified": 1790191162,
-        "narHash": "sha256-oBl8oQuZ8LUhK6FsGZkTXCJtwqmegmUDreeIILH4wRg=",
-        "owner": "juanfont",
+        "lastModified": 1790602627,
+        "narHash": "sha256-cmrpyEoN5BdEvaScAiVua+XbhAhGecUPoxNpRYaV1DU=",
+        "owner": "kradalby",
         "repo": "headscale",
-        "rev": "8106636c7f8d0cf8c9d4fb0beae94415069b768b",
+        "rev": "3616e47935b1f240a0b9bc3bd12fb2b870221bbf",
         "type": "github"
       },
       "original": {
-        "owner": "juanfont",
-        "ref": "v0.29.4",
+        "owner": "kradalby",
+        "ref": "kradalby/hs-flake-test-kit",
         "repo": "headscale",
         "type": "github"
       }
