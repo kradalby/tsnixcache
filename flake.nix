@@ -453,7 +453,8 @@
           tsnet = pkgs.testers.nixosTest (
             import ./nix/tests/tsnet.nix {
               inherit pkgs tsnixcache tsnixcacheModule;
-              headscale = headscale.packages.${system}.headscale;
+              headscaleTestkit = headscale.nixosModules.testkit;
+              headscaleTestkitPeer = headscale.nixosModules.testkit-peer;
             }
           );
 

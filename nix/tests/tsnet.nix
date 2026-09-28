@@ -5,102 +5,15 @@
   pkgs,
   tsnixcache,
   tsnixcacheModule,
-  headscale,
+  headscaleTestkit,
+  headscaleTestkitPeer,
 }:
 
-let
-  # TLS cert for headscale, generated at eval time so all nodes can trust it.
-  # The SAN includes IP 192.168.1.1 — headscale is the first node alphabetically
-  # and therefore gets that address on the test VLAN.
-  # Long validity is load-bearing: this derivation is cached, so a short-lived
-  # cert would expire while the cached build is reused, and every run past expiry
-  # hangs on the control-plane TLS handshake until the test's global timeout.
-  tlsCert = pkgs.runCommand "headscale-test-cert" { } ''
-    mkdir -p $out
-    ${pkgs.openssl}/bin/openssl req -x509 -newkey rsa:2048 \
-      -keyout $out/key.pem -out $out/cert.pem \
-      -days 36500 -nodes \
-      -subj '/CN=headscale' \
-      -addext 'subjectAltName=DNS:headscale,IP:192.168.1.1'
-  '';
-
-  # Shared by every VM: trust the headscale cert and pin its hostname to the
-  # test-VLAN IP.  tsnet prefers IPv6 on the test VLAN, so pinning to IPv4
-  # prevents registration timeouts.
-  sharedConfig = { ... }: {
-    security.pki.certificateFiles = [ "${tlsCert}/cert.pem" ];
-    networking.extraHosts = "192.168.1.1 headscale";
-  };
-
-  # Minimal Tailscale client for pusher/reader nodes.
-  tailscaleClient = { ... }: {
-    services.tailscale.enable = true;
-    # Suppress logtail dials to public infrastructure (log.tailscale.io).
-    systemd.services.tailscaled.environment.TS_NO_LOGS_NO_SUPPORT = "1";
-  };
-in
 {
   name = "tsnixcache-tsnet";
 
   nodes = {
-    headscale =
-      {
-        config,
-        pkgs,
-        lib,
-        ...
-      }:
-      {
-        imports = [ sharedConfig ];
-
-        environment.systemPackages = [ pkgs.jq ];
-
-        services.headscale = {
-          enable = true;
-          package = headscale;
-          address = "127.0.0.1";
-          port = 8080;
-          settings = {
-            server_url = "https://headscale";
-            policy.mode = "database";
-            dns = {
-              magic_dns = false;
-              override_local_dns = false;
-            };
-            # Built-in DERP so nodes can relay without public infrastructure.
-            derp = {
-              server = {
-                enabled = true;
-                region_id = 999;
-                region_code = "test";
-                region_name = "Test DERP";
-                stun_listen_addr = "0.0.0.0:3478";
-              };
-              urls = [ ];
-              auto_update_enabled = false;
-            };
-          };
-        };
-
-        # nginx TLS proxy — tsnet's control client requires HTTPS.
-        services.nginx = {
-          enable = true;
-          virtualHosts."headscale" = {
-            onlySSL = true;
-            sslCertificate = "${tlsCert}/cert.pem";
-            sslCertificateKey = "${tlsCert}/key.pem";
-            locations."/" = {
-              proxyPass = "http://127.0.0.1:8080";
-              proxyWebsockets = true;
-            };
-          };
-        };
-
-        networking.firewall = {
-          allowedTCPPorts = [ 443 ];
-          allowedUDPPorts = [ 3478 ];
-        };
-      };
+    headscale.imports = [ headscaleTestkit ];
 
     server =
       {
@@ -110,10 +23,7 @@ in
         ...
       }:
       {
-        imports = [
-          sharedConfig
-          tsnixcacheModule
-        ];
+        imports = [ tsnixcacheModule ];
 
         environment.systemPackages = [ pkgs.curl ];
 
@@ -125,7 +35,7 @@ in
           tsnet = [
             {
               hostname = "tsnixcache";
-              controlUrl = "https://headscale";
+              controlUrl = "http://headscale";
               # Written by the test script after headscale issues the auth key.
               authKeyFile = "/var/lib/tsnixcache/tsnet-authkey";
               dir = "/var/lib/tsnixcache/tsnet";
@@ -143,16 +53,10 @@ in
         # Don't auto-start: the test writes the auth key first, then starts it.
         systemd.services.tsnixcache.wantedBy = lib.mkForce [ ];
         systemd.services.tsnixcache.environment.TS_NO_LOGS_NO_SUPPORT = "1";
-        # Force tsnet to treat network as up (avoids pause-until-link-change race on a stable test VLAN).
-        systemd.services.tsnixcache.environment.TS_ASSUME_NETWORK_UP_FOR_TEST = "1";
-        systemd.services.tsnixcache.environment.TS_DEBUG_REGISTER = "1";
       };
 
     pusher = { config, pkgs, ... }: {
-      imports = [
-        sharedConfig
-        tailscaleClient
-      ];
+      imports = [ headscaleTestkitPeer ];
 
       # hello lives here so the pusher can push it to the server.
       environment.systemPackages = [
@@ -168,10 +72,7 @@ in
     };
 
     reader = { config, pkgs, ... }: {
-      imports = [
-        sharedConfig
-        tailscaleClient
-      ];
+      imports = [ headscaleTestkitPeer ];
 
       nix.settings = {
         # No pre-configured substituters; we'll pass the tsnet URL explicitly.
@@ -187,15 +88,12 @@ in
 
     start_all()
 
-    headscale.wait_for_unit("headscale.service")
-    headscale.wait_for_unit("nginx.service")
-    headscale.wait_for_open_port(443)
-
     # ── Headscale bootstrap ────────────────────────────────────────────────────
 
-    headscale.succeed("headscale users create server")
-    headscale.succeed("headscale users create pusher")
-    headscale.succeed("headscale users create reader")
+    # hs-authkey also creates each user.
+    server_key = headscale.succeed("hs-authkey server").strip()
+    pusher_key = headscale.succeed("hs-authkey pusher").strip()
+    reader_key = headscale.succeed("hs-authkey reader").strip()
 
     # Policy: accept all traffic; grant push capability only to pusher→server.
     headscale.succeed("""
@@ -214,25 +112,6 @@ in
       headscale policy set -f /tmp/policy.json
     """)
 
-    def user_id(name):
-        return headscale.succeed(
-          f"headscale users list -o json | jq -r '.[] | select(.name==\"{name}\") | .id'"
-        ).strip()
-
-    server_id = user_id("server")
-    pusher_id = user_id("pusher")
-    reader_id = user_id("reader")
-
-    server_key = headscale.succeed(
-      f"headscale preauthkeys create --user {server_id} --reusable -o json | jq -r .key"
-    ).strip()
-    pusher_key = headscale.succeed(
-      f"headscale preauthkeys create --user {pusher_id} --reusable -o json | jq -r .key"
-    ).strip()
-    reader_key = headscale.succeed(
-      f"headscale preauthkeys create --user {reader_id} --reusable -o json | jq -r .key"
-    ).strip()
-
     # ── Start tsnixcache ───────────────────────────────────────────────────────
 
     # Root-owned and mode 0400: the tsnixcache user cannot read this file, so
@@ -243,46 +122,17 @@ in
     server.systemctl("start tsnixcache")
     server.wait_for_unit("tsnixcache.service")
 
-    # ── Diagnostics: verify headscale is reachable from server VM ─────────────
-    # Dump tsnixcache logs to stdout so they appear in nix log output.
-    rc, curl_out = server.execute("curl -sk --head --max-time 10 https://headscale/ 2>&1")
-    print(f"curl headscale from server (rc={rc}): {curl_out}")
-    rc, jctl_out = server.execute("journalctl -u tsnixcache --no-pager 2>&1")
-    print(f"tsnixcache journal:\n{jctl_out}")
-
     # ── Enrol Tailscale clients ────────────────────────────────────────────────
 
-    pusher.wait_for_unit("tailscaled.service")
-    pusher.succeed(
-      f"tailscale up --login-server https://headscale --auth-key {pusher_key} --accept-routes"
-    )
-
-    reader.wait_for_unit("tailscaled.service")
-    reader.succeed(
-      f"tailscale up --login-server https://headscale --auth-key {reader_key} --accept-routes"
-    )
+    pusher.succeed(f"hs-join {pusher_key}")
+    reader.succeed(f"hs-join {reader_key}")
 
     # ── Discover tsnixcache tsnet IP ───────────────────────────────────────────
 
-    def get_tsnet_ip():
-        out = headscale.succeed("headscale nodes list -o json")
-        nodes = json.loads(out)
-        names = [n.get("givenName", n.get("name", "")) for n in nodes]
-        print("headscale nodes: " + str(names))
-        for node in nodes:
-            name = node.get("givenName", node.get("name", ""))
-            if "tsnixcache" in name:
-                for addr in node.get("ipAddresses", node.get("ip_addresses", [])):
-                    if "." in addr:   # IPv4 preferred; tsnet may emit IPv6 first
-                        return addr
-        return None
-
-    # Dump journal before long retry so we can see if tsnet connected.
-    rc, jctl_out = server.execute("journalctl -u tsnixcache --no-pager 2>&1")
-    print(f"tsnixcache journal before retry:\n{jctl_out}")
-
-    retry(lambda _: get_tsnet_ip() is not None)
-    tsnet_ip = get_tsnet_ip()
+    # An active unit only means tsnet started; it registers in the background.
+    # Both clients' requests below are single-shot, so wait until each sees it.
+    tsnet_ip = pusher.wait_until_succeeds("tailscale ip -4 tsnixcache").strip()
+    reader.wait_until_succeeds("tailscale ip -4 tsnixcache")
 
     # ── Push (authenticated write) ─────────────────────────────────────────────
 
