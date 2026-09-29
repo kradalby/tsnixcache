@@ -10,9 +10,7 @@
     flake-checks.url = "github:kradalby/flake-checks";
     flake-checks.inputs.nixpkgs.follows = "nixpkgs";
     # Headscale provides the control plane for the tsnet integration test.
-    # Its test kit lives on this branch until a headscale release ships it
-    # (juanfont/headscale#3507).
-    headscale.url = "github:kradalby/headscale/kradalby/hs-flake-test-kit";
+    headscale.url = "github:juanfont/headscale";
     headscale.inputs.nixpkgs.follows = "nixpkgs";
     headscale.inputs.flake-checks.follows = "flake-checks";
     # nix-darwin provides the launchd-based client module for macOS.
