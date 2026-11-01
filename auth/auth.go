@@ -14,6 +14,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	apitype "tailscale.com/client/tailscale/apitype"
 	"tailscale.com/tailcfg"
+	"tailscale.com/tailcfg/peercap"
 )
 
 // Cap is the Tailscale capability grant for tsnixcache.
@@ -22,7 +23,7 @@ type Cap struct {
 }
 
 // CapName is the capability name used in Tailscale ACL grants.
-const CapName tailcfg.PeerCapability = "kradalby.no/cap/tsnixcache"
+const CapName peercap.Cap = "kradalby.no/cap/tsnixcache"
 
 // WhoIser is implemented by *local.Client and allows fakes in tests.
 type WhoIser interface {

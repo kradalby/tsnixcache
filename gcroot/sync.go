@@ -61,7 +61,7 @@ func makeDir(path string) error {
 	}
 
 	if errors.Is(err, os.ErrExist) {
-		info, statErr := os.Stat(path)
+		info, statErr := os.Stat(path) // #nosec G703 -- trusted configured root directory.
 		if statErr != nil {
 			return statErr
 		}
