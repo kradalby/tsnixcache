@@ -48,6 +48,7 @@ in
     };
     services.grafana = {
       enable = true;
+      declarativePlugins = [ pkgs.grafanaPlugins.prometheus ];
       settings = {
         security.secret_key = "test-only-observability-key";
         server = {
