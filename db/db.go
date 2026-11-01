@@ -169,12 +169,12 @@ func preparePath(path string) (string, error) {
 		return "", fmt.Errorf("db: absolute path: %w", err)
 	}
 
-	err = os.MkdirAll(filepath.Dir(path), 0o700)
+	err = os.MkdirAll(filepath.Dir(path), 0o700) // #nosec G703 -- configured state directory.
 	if err != nil {
 		return "", fmt.Errorf("db: state directory: %w", err)
 	}
 
-	info, err := os.Stat(filepath.Dir(path))
+	info, err := os.Stat(filepath.Dir(path)) // #nosec G703 -- configured state directory.
 	if err != nil {
 		return "", fmt.Errorf("db: inspect state directory: %w", err)
 	}
