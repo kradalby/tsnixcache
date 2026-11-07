@@ -72,12 +72,20 @@
         server.systemctl("start tsnixcache")
         server.wait_for_unit("tsnixcache.service")
 
+    def metric(v):
+        server.wait_until_succeeds(
+            "curl -sf http://127.0.0.1:5000/metrics | grep -Fx"
+            f" 'tsnixcache_tsnet_online{{control=\"http://headscale\",hostname=\"tsnixcache\"}} {v}'",
+            timeout=120,
+        )
+
     # Waits out the old session so online() can only see the new one.
     def restart_with(k):
         server.systemctl("stop tsnixcache")
         online(False)
         start_with(k)
         online()
+        metric(1)
 
     headscale.wait_until_succeeds("headscale health")
     headscale.succeed("""
@@ -95,6 +103,7 @@
     server.succeed("mkdir -p /var/lib/tsnixcache")
     start_with(join_key)
     online()
+    metric(1)
     node_id = node()["id"]
     headscale.succeed(f"headscale nodes tag -i {node_id} -t tag:cache")
 
@@ -115,19 +124,23 @@
 
     # Control that no longer knows the node asks it to log in, and only then
     # does the key go out.
-    with subtest("deleted node offers its spent key"):
+    with subtest("deleted node with a spent key stays down, and says so"):
         server.systemctl("stop tsnixcache")
         online(False)
         headscale.succeed(f"headscale nodes delete -i {node_id} --force")
         start_with(other_key)
         server.wait_until_succeeds(
-            "journalctl -u tsnixcache --no-pager | grep -F 'authkey expired'", timeout=120
+            "journalctl -u tsnixcache --no-pager | grep -F 'tsnet listener has no control session'",
+            timeout=120,
         )
+        server.wait_until_succeeds("journalctl -u tsnixcache --no-pager | grep -F 'authkey expired'", timeout=60)
+        metric(0)
 
     with subtest("deleted node logs in again with a valid key"):
         _, fresh_key = key("tag:cache")
         server.systemctl("stop tsnixcache")
         start_with(fresh_key)
         online()
+        metric(1)
   '';
 }
