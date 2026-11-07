@@ -456,6 +456,14 @@
             }
           );
 
+          # A registered tsnet node restarts with a spent or foreign auth key.
+          tsnet-authkey = pkgs.testers.nixosTest (
+            import ./nix/tests/tsnet-authkey.nix {
+              inherit pkgs tsnixcache tsnixcacheModule;
+              headscaleTestkit = headscale.nixosModules.testkit;
+            }
+          );
+
           # A VM test only ever runs configurations that work, and only ever
           # with one tsnet instance, so the module's refusals, its ExecStart
           # quoting and its index-keyed credentials have no coverage there.

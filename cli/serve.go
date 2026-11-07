@@ -23,6 +23,8 @@ import (
 	"time"
 
 	"golang.org/x/sync/errgroup"
+	"tailscale.com/client/local"
+	"tailscale.com/ipn"
 	"tailscale.com/net/netns"
 	"tailscale.com/tsnet"
 
@@ -770,7 +772,7 @@ func sweepOnce(srv *cache.Server) {
 }
 
 // setupTsnetListener parses a tsnet spec, starts the tsnet server, and registers
-// the listener goroutine with the errgroup.
+// the listener and login goroutines with the errgroup.
 func setupTsnetListener(ctx context.Context, eg *errgroup.Group, spec string, handler http.Handler) error {
 	tsSpec, err := parseTsnetSpec(spec)
 	if err != nil {
@@ -786,6 +788,15 @@ func setupTsnetListener(ctx context.Context, eg *errgroup.Group, spec string, ha
 		}
 
 		authKey = strings.TrimSpace(string(data))
+	}
+
+	// tsnet sends AuthKey with every login, even for a node it already has, and
+	// control judges it: a spent key keeps the node logged out, and a tagged key
+	// other than the node's join key retags it. As with tailscaled, a node with
+	// state uses the key only when control asks it to log in.
+	var loginKey string
+	if hasTsnetState(tsSpec.dir) {
+		authKey, loginKey = "", authKey
 	}
 
 	ts := &tsnet.Server{
@@ -824,7 +835,62 @@ func setupTsnetListener(ctx context.Context, eg *errgroup.Group, spec string, ha
 
 	serveHTTP(ctx, eg, ln, tsnetHandler(lc, handler))
 
+	eg.Go(func() error {
+		watchTsnet(ctx, lc, loginKey, "hostname", tsSpec.hostname, "control", tsSpec.control)
+
+		return nil
+	})
+
 	return nil
+}
+
+// hasTsnetState reports whether tsnet kept state in dir on an earlier start.
+// shortcut: an unset dir is tsnet's own default, which this cannot see, so the
+// key goes to tsnet on every start; the NixOS module always sets dir.
+func hasTsnetState(dir string) bool {
+	if dir == "" {
+		return false
+	}
+
+	_, err := os.Stat(filepath.Join(dir, "tailscaled.state"))
+
+	return err == nil
+}
+
+// tsnetCheckInterval paces watchTsnet.
+const tsnetCheckInterval = 30 * time.Second
+
+// watchTsnet hands loginKey over when control asks for a login; after that the
+// control client holds the key and retries with it itself.
+func watchTsnet(ctx context.Context, lc *local.Client, loginKey string, logArgs ...any) {
+	ticker := time.NewTicker(tsnetCheckInterval)
+	defer ticker.Stop()
+
+	for loginKey != "" {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+		}
+
+		st, err := lc.StatusWithoutPeers(ctx)
+		if err != nil || st.BackendState != ipn.NeedsLogin.String() {
+			continue
+		}
+
+		slog.Info("serve: tsnet needs login, using the auth key", logArgs...)
+
+		err = lc.Start(ctx, ipn.Options{AuthKey: loginKey})
+		if err == nil {
+			err = lc.StartLoginInteractive(ctx)
+		}
+
+		if err != nil {
+			slog.Error("serve: tsnet login", append(logArgs, "err", err)...)
+		} else {
+			loginKey = ""
+		}
+	}
 }
 
 const (
