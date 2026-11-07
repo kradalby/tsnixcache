@@ -1445,6 +1445,24 @@ func TestNewImporterWiresConfig(t *testing.T) {
 	}
 }
 
+// A node with state must restart without its auth key; see setupTsnetListener.
+func TestHasTsnetState(t *testing.T) {
+	dir := t.TempDir()
+
+	if hasTsnetState("") || hasTsnetState(dir) {
+		t.Fatal("hasTsnetState: true before tsnet wrote state")
+	}
+
+	err := os.WriteFile(filepath.Join(dir, "tailscaled.state"), []byte("{}"), 0o600)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !hasTsnetState(dir) {
+		t.Fatal("hasTsnetState: false with tsnet state in dir")
+	}
+}
+
 func TestParseTsnetSpec(t *testing.T) {
 	const testTsnetHostname = "cache"
 

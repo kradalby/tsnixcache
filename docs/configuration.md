@@ -234,6 +234,11 @@ Each `tsnet` entry accepts `hostname`, `authKeyFile`, `dir`, `port`, `tls`, and
 `controlUrl`. The hostname defaults to `tsnixcache` and the port to 80. TLS is
 unsupported; `tls = true` fails evaluation.
 
+The auth key joins a new node. A node with state in `dir` restarts without it,
+as `tailscaled` does, and offers it only when control asks for a login. So a key
+that has since expired or been used does not keep the node out, and a key with
+other tags does not retag it.
+
 See [Garbage collection](operations.md#garbage-collection) before adding rules.
 
 ### Client
