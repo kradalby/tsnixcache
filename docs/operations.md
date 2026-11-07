@@ -78,6 +78,10 @@ Received bytes include failed uploads. With zstd serving enabled, served bytes
 count the compressed response. Use `rate(...[$__rate_interval])` for throughput
 in Grafana.
 
+`tsnixcache_tsnet_online{hostname,control}` is `1` while a tsnet listener holds
+a session with its control server. At `0`, that tailnet cannot reach the cache,
+though the process serves on its other listeners. Alert on it.
+
 ### Grafana
 
 Build dashboard JSON for file provisioning:
