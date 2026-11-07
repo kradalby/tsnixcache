@@ -29,6 +29,7 @@ import (
 	"tailscale.com/tsnet"
 
 	"github.com/peterbourgon/ff/v4"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/kradalby/tsnixcache/auth"
 	"github.com/kradalby/tsnixcache/cache"
@@ -545,8 +546,16 @@ func runServe(ctx context.Context, cfg serveConfig) error {
 		serveHTTP(egCtx, eg, ln, local)
 	}
 
+	// tsnet retries a failed login forever while the other listeners serve on,
+	// so each listener's control session is exported for alerting.
+	tsnetOnline := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "tsnixcache_tsnet_online",
+		Help: "1 while a tsnet listener holds a session with its control server; at 0, tailnet peers cannot reach it.",
+	}, []string{"hostname", "control"})
+	srv.Registry().MustRegister(tsnetOnline)
+
 	for _, spec := range cfg.tsnetSpecs {
-		err := setupTsnetListener(egCtx, eg, spec, handler)
+		err := setupTsnetListener(egCtx, eg, spec, handler, tsnetOnline)
 		if err != nil {
 			// Hand the failure to the group rather than returning: that
 			// cancels egCtx, so the listeners bound above shut down and their
@@ -772,8 +781,14 @@ func sweepOnce(srv *cache.Server) {
 }
 
 // setupTsnetListener parses a tsnet spec, starts the tsnet server, and registers
-// the listener and login goroutines with the errgroup.
-func setupTsnetListener(ctx context.Context, eg *errgroup.Group, spec string, handler http.Handler) error {
+// the listener and its watcher goroutines with the errgroup.
+func setupTsnetListener(
+	ctx context.Context,
+	eg *errgroup.Group,
+	spec string,
+	handler http.Handler,
+	online *prometheus.GaugeVec,
+) error {
 	tsSpec, err := parseTsnetSpec(spec)
 	if err != nil {
 		return fmt.Errorf("serve: parse --tsnet flag: %w", err)
@@ -835,8 +850,11 @@ func setupTsnetListener(ctx context.Context, eg *errgroup.Group, spec string, ha
 
 	serveHTTP(ctx, eg, ln, tsnetHandler(lc, handler))
 
+	gauge := online.WithLabelValues(tsSpec.hostname, tsSpec.control)
+	gauge.Set(0)
+
 	eg.Go(func() error {
-		watchTsnet(ctx, lc, loginKey, "hostname", tsSpec.hostname, "control", tsSpec.control)
+		watchTsnet(ctx, lc, gauge, loginKey, "hostname", tsSpec.hostname, "control", tsSpec.control)
 
 		return nil
 	})
@@ -857,16 +875,21 @@ func hasTsnetState(dir string) bool {
 	return err == nil
 }
 
-// tsnetCheckInterval paces watchTsnet.
+// tsnetCheckInterval paces watchTsnet: long enough to ride out a reconnect,
+// short enough that a dead listener shows within an alert's window.
 const tsnetCheckInterval = 30 * time.Second
 
-// watchTsnet hands loginKey over when control asks for a login; after that the
-// control client holds the key and retries with it itself.
-func watchTsnet(ctx context.Context, lc *local.Client, loginKey string, logArgs ...any) {
+// watchTsnet exports whether a tsnet listener holds a control session and logs
+// when that changes. When control asks for a login, it hands over loginKey;
+// after that the control client holds the key and retries with it itself.
+func watchTsnet(ctx context.Context, lc *local.Client, online prometheus.Gauge, loginKey string, logArgs ...any) {
 	ticker := time.NewTicker(tsnetCheckInterval)
 	defer ticker.Stop()
 
-	for loginKey != "" {
+	// A listener that never logs in is reported at the first check.
+	wasOnline := true
+
+	for {
 		select {
 		case <-ctx.Done():
 			return
@@ -874,21 +897,41 @@ func watchTsnet(ctx context.Context, lc *local.Client, loginKey string, logArgs 
 		}
 
 		st, err := lc.StatusWithoutPeers(ctx)
-		if err != nil || st.BackendState != ipn.NeedsLogin.String() {
+		if err != nil {
 			continue
 		}
 
-		slog.Info("serve: tsnet needs login, using the auth key", logArgs...)
+		if loginKey != "" && st.BackendState == ipn.NeedsLogin.String() {
+			slog.Info("serve: tsnet needs login, using the auth key", logArgs...)
 
-		err = lc.Start(ctx, ipn.Options{AuthKey: loginKey})
-		if err == nil {
-			err = lc.StartLoginInteractive(ctx)
+			err = lc.Start(ctx, ipn.Options{AuthKey: loginKey})
+			if err == nil {
+				err = lc.StartLoginInteractive(ctx)
+			}
+
+			if err != nil {
+				slog.Error("serve: tsnet login", append(logArgs, "err", err)...)
+			} else {
+				loginKey = ""
+			}
 		}
 
-		if err != nil {
-			slog.Error("serve: tsnet login", append(logArgs, "err", err)...)
+		isOnline := st.Self != nil && st.Self.Online
+
+		switch {
+		case isOnline && !wasOnline:
+			slog.Info("serve: tsnet listener is back online", logArgs...)
+		case !isOnline && wasOnline:
+			slog.Error("serve: tsnet listener has no control session, tailnet peers cannot reach it",
+				append(logArgs, "state", st.BackendState, "health", st.Health)...)
+		}
+
+		wasOnline = isOnline
+
+		if isOnline {
+			online.Set(1)
 		} else {
-			loginKey = ""
+			online.Set(0)
 		}
 	}
 }
