@@ -12,6 +12,7 @@ import (
 	"io"
 	"log/slog"
 	"maps"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -491,36 +492,72 @@ type narDeadlineWriter struct {
 	timeout time.Duration
 }
 
+// Write renews the deadline per narDeadlineChunk: nar.Write flushes a buffer
+// several chunks long in one call.
 func (w *narDeadlineWriter) Write(p []byte) (int, error) {
-	err := w.deadline()
-	if err != nil {
-		return 0, err
-	}
+	var total int
 
-	return w.w.Write(p)
-}
-
-// ReadFrom retains sendfile while renewing the deadline between bounded transfers.
-func (w *narDeadlineWriter) ReadFrom(r io.Reader) (int64, error) {
-	var total int64
-
-	for {
+	for len(p) > 0 {
 		err := w.deadline()
 		if err != nil {
 			return total, err
 		}
 
-		n, err := io.CopyN(w.w, r, 1<<20)
+		n, err := w.w.Write(p[:min(len(p), narDeadlineChunk)])
 
 		total += n
-		if errors.Is(err, io.EOF) {
-			return total, nil
+		if err != nil {
+			return total, err
 		}
+
+		p = p[n:]
+	}
+
+	return total, nil
+}
+
+// narDeadlineChunk is what one deadline must cover. The deadline is there to
+// drop a reader that has stalled, so a reader fails only below one chunk per
+// narWriteTimeout: small enough to spare a slow one, large enough that a file
+// copy stays a handful of sendfile calls per megabyte.
+const narDeadlineChunk = 64 << 10
+
+// ReadFrom retains sendfile while renewing the deadline between bounded transfers.
+func (w *narDeadlineWriter) ReadFrom(r io.Reader) (int64, error) {
+	// A limit on top of the caller's limit hides the file from sendfile, so
+	// bound each chunk by narrowing the caller's own.
+	src, limited := r.(*io.LimitedReader)
+	if !limited {
+		src = &io.LimitedReader{R: r, N: math.MaxInt64}
+	}
+
+	var total int64
+
+	for src.N > 0 {
+		err := w.deadline()
+		if err != nil {
+			return total, err
+		}
+
+		limit := min(src.N, narDeadlineChunk)
+		n, err := readFrom(w.w, &io.LimitedReader{R: src.R, N: limit})
+
+		total += n
+		src.N -= n
 
 		if err != nil {
 			return total, err
 		}
+
+		// Only an empty transfer is the end of the source: sendfile may come
+		// back short on some platforms, and stopping there truncates the NAR
+		// without an error.
+		if n == 0 {
+			break
+		}
 	}
+
+	return total, nil
 }
 
 func (w *narDeadlineWriter) deadline() error {

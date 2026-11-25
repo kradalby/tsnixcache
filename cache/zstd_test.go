@@ -4,6 +4,8 @@
 package cache
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"crypto/rand"
 	"fmt"
@@ -158,6 +160,92 @@ func TestZstdCloseWaitsForLease(t *testing.T) {
 	require.Zero(t, srv.zstdCacheBytes)
 }
 
+// deadlineRecorder is a ResponseWriter that records how many bytes arrive
+// between deadline renewals.
+type deadlineRecorder struct {
+	http.ResponseWriter
+
+	perDeadline []int
+}
+
+func (d *deadlineRecorder) SetWriteDeadline(time.Time) error {
+	d.perDeadline = append(d.perDeadline, 0)
+
+	return nil
+}
+
+func (d *deadlineRecorder) Write(p []byte) (int, error) {
+	d.perDeadline[len(d.perDeadline)-1] += len(p)
+
+	return len(p), nil
+}
+
+// shortReaderFrom moves less than it is offered, as sendfile may.
+type shortReaderFrom struct{ *deadlineRecorder }
+
+func (s shortReaderFrom) ReadFrom(r io.Reader) (int64, error) {
+	return io.Copy(s.deadlineRecorder, io.LimitReader(r, 1000))
+}
+
+// No path may put more than a chunk under one deadline, or the stall guard
+// turns into a rate floor that cuts slow readers.
+func TestNarDeadlineRenewsPerChunk(t *testing.T) {
+	const size = 5*narDeadlineChunk + 123
+
+	payload := make([]byte, size)
+
+	tests := []struct {
+		name  string
+		short bool
+		write func(w *narDeadlineWriter) (int64, error)
+	}{
+		{"Write", false, func(w *narDeadlineWriter) (int64, error) {
+			n, err := w.Write(payload)
+
+			return int64(n), err
+		}},
+		{"ReadFrom", false, func(w *narDeadlineWriter) (int64, error) {
+			return w.ReadFrom(bytes.NewReader(payload))
+		}},
+		{"ReadFrom short transfers", true, func(w *narDeadlineWriter) (int64, error) {
+			return w.ReadFrom(bytes.NewReader(payload))
+		}},
+		// nar.Write hands over a file already capped at its declared size; the
+		// cap must still hold, and must count down for the caller.
+		{"ReadFrom limited", false, func(w *narDeadlineWriter) (int64, error) {
+			lr := &io.LimitedReader{R: io.MultiReader(bytes.NewReader(payload), strings.NewReader("grew")), N: size}
+			n, err := w.ReadFrom(lr)
+			require.Zero(t, lr.N)
+
+			return n, err
+		}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rec := &deadlineRecorder{ResponseWriter: httptest.NewRecorder()}
+
+			var sink http.ResponseWriter = rec
+			if tt.short {
+				sink = shortReaderFrom{rec}
+			}
+
+			n, err := tt.write(&narDeadlineWriter{w: sink, timeout: time.Second})
+			require.NoError(t, err)
+			require.EqualValues(t, size, n)
+
+			var total int
+
+			for _, got := range rec.perDeadline {
+				require.LessOrEqual(t, got, narDeadlineChunk)
+
+				total += got
+			}
+
+			require.Equal(t, size, total)
+		})
+	}
+}
+
 func TestNarDeadlineUnsupported(t *testing.T) {
 	writer := &narDeadlineWriter{w: httptest.NewRecorder(), timeout: time.Second}
 	_, err := writer.Write([]byte("nar"))
@@ -279,6 +367,71 @@ func TestZstdStalledTCPReaderReleasesBudget(t *testing.T) {
 	}, 5*time.Second, time.Millisecond)
 	require.Equal(t, 1, srv.SweepZstdCache(0))
 	require.Zero(t, srv.zstdCacheBytes)
+}
+
+// A reader that is slow but alive must get the whole NAR: the deadline bounds
+// a stall, not the transfer rate.
+func TestZstdSlowTCPReaderGetsWholeNar(t *testing.T) {
+	srv := newZstdCacheServer(t)
+
+	const size = 4 << 20
+
+	srv.zstdCacheLimit = size
+	srv.narWriteTimeout = 100 * time.Millisecond
+	e := seedZstdEntry(t, srv, "slow", size, time.Now())
+	require.NoError(t, os.WriteFile(e.path, make([]byte, size), 0o600))
+
+	ts := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		srv.serveZstdNar(r.Context(), w, &store.PathInfo{NarHash: e.key})
+	}))
+	// Small socket buffers on both ends, so the server feels the reader's pace
+	// instead of the kernel swallowing the body.
+	ts.Config.ConnState = func(c net.Conn, state http.ConnState) {
+		if state == http.StateNew {
+			assert.NoError(t, c.(*net.TCPConn).SetWriteBuffer(64<<10))
+		}
+	}
+	ts.Start()
+
+	defer ts.Close()
+
+	conn, err := (&net.Dialer{}).DialContext(t.Context(), "tcp", ts.Listener.Addr().String())
+	require.NoError(t, err)
+
+	defer conn.Close()
+
+	require.NoError(t, conn.(*net.TCPConn).SetReadBuffer(64<<10))
+	_, err = fmt.Fprintf(conn, "GET /nar/slow.nar.zstd HTTP/1.1\r\nHost: test\r\n\r\n")
+	require.NoError(t, err)
+
+	resp, err := http.ReadResponse(bufio.NewReader(conn), nil)
+	require.NoError(t, err)
+
+	defer resp.Body.Close()
+
+	// Slower than a megabyte per timeout, faster than a chunk per timeout.
+	tick := time.NewTicker(10 * time.Millisecond)
+	defer tick.Stop()
+
+	var total int64
+
+	var readErr error
+
+	buf := make([]byte, 32<<10)
+
+	for range tick.C {
+		var n int
+
+		n, readErr = io.ReadFull(resp.Body, buf)
+
+		total += int64(n)
+
+		if readErr != nil {
+			break
+		}
+	}
+
+	require.EqualValuesf(t, size, total, "body ended with: %v", readErr)
 }
 
 func TestZstdNarInfoCannotDeleteOwnership(t *testing.T) {
